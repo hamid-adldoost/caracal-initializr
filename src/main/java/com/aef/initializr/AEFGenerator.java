@@ -10,18 +10,7 @@ public class AEFGenerator {
 
     public static void main(String args[]) throws IOException {
 
-//        Map<String, String> fields = new HashMap<>();
-//        fields.put("id", "Long");
-//        fields.put("phone", "String");
-//        fields.put("number", "Integer");
-//        fields.put("building", "Building");
-//        fields.put("roof", "Integer");
-//        fields.put("parking", "Integer");
-//        fields.put("warehouse", "Integer");
-//        fields.put("description", "String");
-//        fields.put("owner", "Person");
-//        fields.put("resident", "Person");
-//
+
         String dataSourceUrl = InitializrReaderUtility.getResourceProperity("datasource.url");
         String dataSourceUsername = InitializrReaderUtility.getResourceProperity("datasource.username");
         String dataSourcePassword = InitializrReaderUtility.getResourceProperity("datasource.password");
@@ -35,7 +24,10 @@ public class AEFGenerator {
         String groupId = InitializrReaderUtility.getResourceProperity("maven.group.id");
         String jwtKey = InitializrReaderUtility.getResourceProperity("jwt.key");
         String jwtExpiration = InitializrReaderUtility.getResourceProperity("jwt.expiration");
-        Boolean validationEnabled = Boolean.parseBoolean(InitializrReaderUtility.getResourceProperity("validation.enabled"));
+        boolean validationEnabled = Boolean.parseBoolean(InitializrReaderUtility.getResourceProperity("validation.enabled"));
+
+        String frontProjectName = InitializrReaderUtility.getResourceProperity("front.project.name");
+        String frontProjectPath = InitializrReaderUtility.getResourceProperity("front.target.path");
 
         List<String> entities = findEntities();
 
@@ -56,6 +48,9 @@ public class AEFGenerator {
                 jwtKey,
                 jwtExpiration,
                 validationEnabled);
+
+        FrontGenerator frontGenerator = new FrontGenerator();
+        frontGenerator.generateStructureOfProject(frontProjectName, frontProjectPath);
 
     }
 
@@ -288,15 +283,16 @@ public class AEFGenerator {
                 "        return new BCryptPasswordEncoder();\n" +
                 "    }\n" +
                 "\n" +
-                "@Bean\n" +
-                "    public MessageSource messageSource() {\n" +
-                "        ReloadableResourceBundleMessageSource messageSource\n" +
-                "           = new ReloadableResourceBundleMessageSource();\n" +
-                "        \n" +
-                "       messageSource.setBasename(\"classpath:messages\");\n" +
-                "       messageSource.setDefaultEncoding(\"UTF-8\");\n" +
-                "       return messageSource;\n" +
-                "    }" +
+                "//    @Bean\n" +
+                "//    public MessageSource messageSource() {\n" +
+                "//        ReloadableResourceBundleMessageSource messageSource\n" +
+                "//           = new ReloadableResourceBundleMessageSource();\n" +
+                "//\n" +
+                "//       messageSource.setBasename(\"classpath:messages\");\n" +
+                "//       messageSource.setDefaultEncoding(\"UTF-8\");\n" +
+                "//       return messageSource;\n" +
+                "//    }" +
+
                 "\n" +
                 "\n" +
                 "    @Autowired\n" +
