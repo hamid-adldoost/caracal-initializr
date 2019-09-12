@@ -35,6 +35,7 @@ public class AEFGenerator {
         String groupId = InitializrReaderUtility.getResourceProperity("maven.group.id");
         String jwtKey = InitializrReaderUtility.getResourceProperity("jwt.key");
         String jwtExpiration = InitializrReaderUtility.getResourceProperity("jwt.expiration");
+        Boolean validationEnabled = Boolean.parseBoolean(InitializrReaderUtility.getResourceProperity("validation.enabled"));
 
         List<String> entities = findEntities();
 
@@ -53,7 +54,8 @@ public class AEFGenerator {
                 contextPath,
                 portNumber,
                 jwtKey,
-                jwtExpiration);
+                jwtExpiration,
+                validationEnabled);
 
     }
 
@@ -70,7 +72,8 @@ public class AEFGenerator {
                                     String contextPath,
                                     String portNumber,
                                     String jwtKey,
-                                    String jwtExpiration) throws IOException {
+                                    String jwtExpiration,
+                                    boolean validationEnabled) throws IOException {
 
 
         generateStructureOfProject(projectName, basePackage, targetPath);
@@ -133,7 +136,7 @@ public class AEFGenerator {
                     generateEntity(basePackage, entityName, fields, modelPath.getPath());
                 }
                 if(checkGeneration("generate.dto")) {
-                    generateDto(basePackage, entityName, fields, dtoPath.getPath());
+                    generateDto(basePackage, entityName, fields, dtoPath.getPath(), validationEnabled);
                 }
                 if(checkGeneration("generate.dao")) {
                     generateDao(basePackage, entityName, daoPath.getPath());
@@ -246,7 +249,9 @@ public class AEFGenerator {
                 "import org.slf4j.LoggerFactory;\n" +
                 "import org.springframework.beans.factory.InjectionPoint;\n" +
                 "import org.springframework.beans.factory.annotation.Autowired;\n" +
+                "import org.springframework.context.MessageSource;\n" +
                 "import org.springframework.context.annotation.Bean;\n" +
+                "import org.springframework.context.support.ReloadableResourceBundleMessageSource;\n" +
                 "import org.springframework.context.annotation.Configuration;\n" +
                 "import org.springframework.context.annotation.Scope;\n" +
                 "import org.springframework.security.authentication.AuthenticationManager;\n" +
@@ -282,6 +287,17 @@ public class AEFGenerator {
                 "    public PasswordEncoder passwordEncoder() {\n" +
                 "        return new BCryptPasswordEncoder();\n" +
                 "    }\n" +
+                "\n" +
+                "@Bean\n" +
+                "    public MessageSource messageSource() {\n" +
+                "        ReloadableResourceBundleMessageSource messageSource\n" +
+                "           = new ReloadableResourceBundleMessageSource();\n" +
+                "        \n" +
+                "       messageSource.setBasename(\"classpath:messages\");\n" +
+                "       messageSource.setDefaultEncoding(\"UTF-8\");\n" +
+                "       return messageSource;\n" +
+                "    }" +
+                "\n" +
                 "\n" +
                 "    @Autowired\n" +
                 "    public SecurityConfig(JwtAuthenticationEntryPoint unauthorizedHandler, JwtAuthenticationProvider jwtAuthenticationProvider, TokenRepository tokenRepository) {\n" +
@@ -546,7 +562,7 @@ public class AEFGenerator {
                 "        <dependency>\n" +
                 "            <groupId>com.adldoost</groupId>\n" +
                 "            <artifactId>aef3-data</artifactId>\n" +
-                "            <version>1.0-SNAPSHOT</version>\n" +
+                "            <version>1.2-SNAPSHOT</version>\n" +
                 "        </dependency>\n" +
                 "        <dependency>\n" +
                 "           <groupId>mysql</groupId>\n" +
@@ -868,9 +884,9 @@ public class AEFGenerator {
 
     }
 
-    private static String generateDto(String basePackage, String entityName, Map<String, String> fieldMap, String targetPath) throws FileNotFoundException {
+    private static String generateDto(String basePackage, String entityName, Map<String, String> fieldMap, String targetPath, boolean validationEnabled) throws FileNotFoundException {
         String result = generateDtoHeader();
-        result += generateDtoFields(fieldMap);
+        result += generateDtoFields(fieldMap, validationEnabled, entityName);
         result += generateDtoMappings(fieldMap, entityName);
         result += generateDtoOverrideMethods(entityName);
         result += generateFooter();
@@ -895,6 +911,8 @@ public class AEFGenerator {
                 "import com.aef3.data.api.DomainDto;\n" +
                 "import com.fasterxml.jackson.annotation.JsonIgnore;\n" +
                 "import #package.model.#Entity;\n" +
+                "import javax.validation.constraints.NotNull;\n" +
+                "import javax.validation.constraints.NotEmpty;\n" +
                 "import java.util.Date;\n" +
                 "\n" +
                 "\n" +
@@ -907,7 +925,7 @@ public class AEFGenerator {
 
     }
 
-    private static String generateDtoFields(Map<String, String> fields) {
+    private static String generateDtoFields(Map<String, String> fields, boolean validationEnabled, String entityName) {
 
         StringBuilder content = new StringBuilder();
 
@@ -916,6 +934,15 @@ public class AEFGenerator {
         for (Map.Entry<String, String> entry : fields.entrySet())
         {
             if(getBaseTypes().contains(entry.getValue())) {
+                if(validationEnabled) {
+                    if(!findFieldNullability(entityName, entry.getKey())) {
+                        if(entry.getValue().trim().equalsIgnoreCase("String")) {
+                            content.append("\n    @NotEmpty(message = \"{").append(entry.getKey()).append(".should.not.be.Empty}\")");
+                        } else {
+                            content.append("\n    @NotNull(message = \"{").append(entry.getKey()).append(".should.not.be.null}\")");
+                        }
+                    }
+                }
                 content.append("\n    private ").append(entry.getValue()).append(" ").append(entry.getKey()).append(";");
             } else {
                 content.append("\n    private ").append(entry.getValue() + "Dto").append(" ").append(entry.getKey()).append(";");
