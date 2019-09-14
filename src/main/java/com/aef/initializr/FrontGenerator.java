@@ -3,6 +3,7 @@ package com.aef.initializr;
 import org.springframework.util.ResourceUtils;
 
 import java.io.*;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -33,6 +34,99 @@ public class FrontGenerator {
             e.printStackTrace();
         }
     }
+
+    public static String generateEntityComponent(String path, String entityName, String entityFarsiName, Map<String, String> fields) throws FileNotFoundException {
+
+        StringBuilder content = new StringBuilder("import { Component, OnInit } from '@angular/core';\n" +
+                "import {#EntityService} from './#entity.service';\n" +
+                "import {QueryOptions} from '../general/query-options';\n" +
+                "\n" +
+                "@Component({\n" +
+                "  selector: 'app-#entity',\n" +
+                "  templateUrl: './#entity.component.html',\n" +
+                "  styleUrls: ['./#entity.component.css']\n" +
+                "})\n" +
+                "export class #EntityComponent implements OnInit {\n" +
+                "\n" +
+                "  constructor(private #LowerCaseService: #EntityService) { }\n" +
+                "\n" + "");
+
+//                fields.forEach((k, v) -> {
+//                    content.append("\n   " + k + " : any;");
+//                });
+
+        content.append("\n" +
+                "  #LowerCase : any;\n");
+
+                content.append(
+                "\n  items = [];\n" +
+                "\n" +
+                "  ngOnInit() {\n" +
+                "    this.#LowerCase = {};\n" +
+                "    this.#LowerCaseService.list(new QueryOptions(), 'search').subscribe(res => {\n" +
+                "      console.log('list call res', res);\n" +
+                "      this.items = res;\n" +
+                "    });\n" +
+                "  }\n" +
+                "\n" +
+                "}\n");
+
+        content.append("\n\n");
+
+        String componentFileName = GeneratorTools.camelToSnake(entityName);
+
+        String result = content.toString();
+        result = result.replaceAll("#LowerCase", entityName.toLowerCase())
+                .replaceAll("#Entity", entityName)
+                .replaceAll("#entity", GeneratorTools.camelToSnake(entityName));
+
+        System.out.printf(result);
+        path += "src\\app\\" + GeneratorTools.camelToDashedSnake(entityName).toLowerCase() + "\\";
+        File file = new File(path);
+        file.mkdirs();
+        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/" + GeneratorTools.camelToSnake(entityName).toLowerCase() + ".component.ts"))) {
+            out.print(result);
+        }
+        return result;
+
+    }
+
+    public static String generateEntityService(String path, String entityName) throws FileNotFoundException {
+
+        StringBuilder content = new StringBuilder("import { Injectable } from '@angular/core';\n" +
+                "import {BaseServiceService} from '../general/base-service.service';\n" +
+                "import {HttpClient} from '@angular/common/http';\n" +
+                "\n" +
+                "@Injectable({\n" +
+                "  providedIn: 'root'\n" +
+                "})\n" +
+                "export class " + entityName + "Service extends BaseServiceService {\n" +
+                "\n" +
+                "      constructor(httpClient: HttpClient) {\n" +
+                "\n" +
+                "        super(httpClient, '" + entityName + "');\n" +
+                "      }\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "}");
+        String result = content.toString();
+        result = result.replaceAll("#LowerCase", entityName.toLowerCase())
+                .replaceAll("#Entity", entityName)
+                .replaceAll("#entity", GeneratorTools.camelToSnake(entityName));
+        System.out.printf(result);
+        path += "src\\app\\" + GeneratorTools.camelToDashedSnake(entityName).toLowerCase() + "\\";
+        File file = new File(path);
+        file.mkdirs();
+        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/" + GeneratorTools.camelToSnake(entityName).toLowerCase() + ".service.ts"))) {
+            out.print(result);
+        }
+        return result;
+
+    }
+
+
 
     public static void replaceText(String frontProjectPath, String projectName) {
 

@@ -47,7 +47,8 @@ public class AEFGenerator {
                 portNumber,
                 jwtKey,
                 jwtExpiration,
-                validationEnabled);
+                validationEnabled,
+                frontProjectPath);
 
         FrontGenerator frontGenerator = new FrontGenerator();
         frontGenerator.generateStructureOfProject(frontProjectName, frontProjectPath);
@@ -68,7 +69,8 @@ public class AEFGenerator {
                                     String portNumber,
                                     String jwtKey,
                                     String jwtExpiration,
-                                    boolean validationEnabled) throws IOException {
+                                    boolean validationEnabled,
+                                    String frontProjectPath) throws IOException {
 
 
         generateStructureOfProject(projectName, basePackage, targetPath);
@@ -94,6 +96,7 @@ public class AEFGenerator {
         jwtPath.mkdirs();
         rootPath.mkdirs();
         resourcePath.mkdirs();
+
 
         if(checkGeneration("generate.pom")) {
             generatePOMFile(rootPath.getPath(), projectName, projectDescription, artifcatId, groupId);
@@ -148,6 +151,10 @@ public class AEFGenerator {
                 if(checkGeneration("generate.rest")) {
                     generateRestService(basePackage, entityName, fields, restPath.getPath());
                 }
+
+                FrontGenerator.generateEntityComponent(frontProjectPath , entityName, entityName, fields);
+                FrontGenerator.generateEntityService(frontProjectPath , entityName);
+
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
