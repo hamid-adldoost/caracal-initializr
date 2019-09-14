@@ -223,7 +223,14 @@ public class AEFGenerator {
                 "    public SecurityWrapper login(@RequestParam(name = \"username\") String username,\n" +
                 "                                 @RequestParam(name = \"password\") String password) {\n" +
                 "\n" +
-                "        return securityService.authenticate(username, password);\n" +
+                "        SecurityWrapper securityWrapper = securityService.authenticate(username, password);\n" +
+                "        JWTUserDetails userDetails = new JWTUserDetails(securityWrapper);\n" +
+                "        // Issue a token for the user\n" +
+                "        // String token = issueToken(username);\n" +
+                "        String token = JWTUtil.generateToken(userDetails);\n" +
+                "        // Return the token on the response\n" +
+                "        response.setHeader(HttpHeaders.AUTHORIZATION, \"Bearer \" + token);\n" +
+                "        return securityWrapper;" +
                 "    }\n" +
                 "}\n";
         String result = content.replaceAll("#package", basePackage);
