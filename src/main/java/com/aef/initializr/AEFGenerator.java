@@ -1,6 +1,7 @@
 package com.aef.initializr;
 
 import com.google.common.base.CaseFormat;
+import javafx.util.Pair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -30,8 +31,12 @@ public class AEFGenerator {
         String frontProjectPath = InitializrReaderUtility.getResourceProperity("front.target.path");
 
         List<String> entities = findEntities();
+        LinkedHashMap<String, String> farsiNames = findEntitiesFarsiNames();
+        LinkedHashMap<String, LinkedHashMap<String, String>> farsiFields = findFieldsFarsiNames();
 
 
+        FrontGenerator frontGenerator = new FrontGenerator();
+        frontGenerator.generateStructureOfProject(frontProjectName, frontProjectPath);
 
         generateAll(basePackage,
                 entities,
@@ -48,10 +53,11 @@ public class AEFGenerator {
                 jwtKey,
                 jwtExpiration,
                 validationEnabled,
-                frontProjectPath);
+                frontProjectPath,
+                farsiNames,
+                farsiFields);
 
-        FrontGenerator frontGenerator = new FrontGenerator();
-        frontGenerator.generateStructureOfProject(frontProjectName, frontProjectPath);
+
 
     }
 
@@ -70,7 +76,9 @@ public class AEFGenerator {
                                     String jwtKey,
                                     String jwtExpiration,
                                     boolean validationEnabled,
-                                    String frontProjectPath) throws IOException {
+                                    String frontProjectPath,
+                                    LinkedHashMap<String, String> farsiNames,
+                                    LinkedHashMap<String, LinkedHashMap<String, String>> farsiFields) throws IOException {
 
 
         generateStructureOfProject(projectName, basePackage, targetPath);
@@ -154,11 +162,14 @@ public class AEFGenerator {
 
                 FrontGenerator.generateEntityComponent(frontProjectPath , entityName, entityName, fields);
                 FrontGenerator.generateEntityService(frontProjectPath , entityName);
+                FrontGenerator.generateEntityHtmlView(frontProjectPath, entityName, farsiNames.get(entityName), fields, farsiFields.get(entityName));
+
 
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
         });
+        FrontGenerator.refactorAppModule(frontProjectPath, entityNameList);
 
 
 
@@ -455,6 +466,47 @@ public class AEFGenerator {
             }
         });
         return entities;
+    }
+
+    private static LinkedHashMap<String, String> findEntitiesFarsiNames() {
+        Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
+        List<String> keyList = Collections.list(keys);
+
+        LinkedHashMap<String, String> entities = new LinkedHashMap<>();
+
+        keyList.stream().forEach(k -> {
+            if(k.contains("entity.farsi.name.")) {
+                String[] parts = k.split("\\.");
+                String farsi = InitializrReaderUtility.getResourceProperity(k);
+                entities.put(parts[3], farsi);
+            }
+        });
+        return entities;
+    }
+
+    private static LinkedHashMap<String, LinkedHashMap<String, String>> findFieldsFarsiNames() {
+
+        List<String> entites = findEntities();
+        LinkedHashMap<String, LinkedHashMap<String, String>> result = new LinkedHashMap<>();
+
+        entites.forEach(e -> {
+            Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
+            List<String> keyList = Collections.list(keys);
+
+            LinkedHashMap<String, String> fields = new LinkedHashMap<>();
+
+            keyList.stream().forEach(k -> {
+                if(k.contains(e + ".field.farsi.")) {
+                    String[] parts = k.split("\\.");
+                    String farsi = InitializrReaderUtility.getResourceProperity(k);
+                    fields.put(parts[3], farsi);
+                }
+            });
+            result.put(e, fields);
+        });
+
+
+        return result;
     }
 
     private static String generateSourceTargetPackagePath(String targetPath, String basePackage, String projectName) {
@@ -1237,7 +1289,7 @@ public class AEFGenerator {
                 if(checkGeneration("generate.security.roles")) {
                     content.append("\n    @Secured(AccessRoles.ROLE_REMOVE_").append(camelToSnake(entity).toUpperCase()).append(")\n");
                 }
-                content.append("    @DeleteMapping(path = \"/remove/{id}\")\n" +
+                content.append("    @DeleteMapping(path = \"/delete/{id}\")\n" +
                 "    public void remove(@PathVariable(name = \"id\")Long id) {\n" +
                 "        #entityService.remove(id);\n" +
                 "    }");

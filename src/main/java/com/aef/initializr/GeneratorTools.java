@@ -23,4 +23,11 @@ public class GeneratorTools {
         System.out.println(snake);
         return snake;
     }
+
+    public static String pascalCaseToCamelCase(String str) {
+        if(str == null || str.isEmpty())
+            return "";
+        String firstChar = str.substring(0, 1);
+        return str.replaceFirst(firstChar, firstChar.toLowerCase());
+    }
 }
