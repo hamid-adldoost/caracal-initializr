@@ -5,6 +5,7 @@ import org.springframework.util.ResourceUtils;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -45,6 +46,7 @@ public class FrontGenerator {
                 "import {QueryOptions} from '../general/query-options';\n" +
                 "import {MessageService} from 'primeng/api';\n" +
                 "import {CommonService} from '../common.service';\n" +
+                "import * as moment from 'jalali-moment';\n" +
                 "import {ConfirmationService} from 'primeng/api';\n" +
                 "\n" +
                 "@Component({\n" +
@@ -96,11 +98,12 @@ public class FrontGenerator {
                 "      this.#LowerCase = res;\n" +
                 "      this.loadItems(null);\n" +
                 "      this.commonService.showSubmitMessage();\n" +
+                "      this.#LowerCase = new Object()\n" +
                 "    });\n" +
                 "  }\n" +
                 "\n" +
                 "  delete(id: number) {\n" +
-                "    this.#LowerCaseService.delete(id, 'delete').subscribe(res => {\n" +
+                "    this.#LowerCaseService.delete(id, 'remove').subscribe(res => {\n" +
                 "      this.commonService.showDeleteMessage();\n" +
                 "      this.loadItems(null);\n" +
                 "    });\n" +
@@ -108,7 +111,8 @@ public class FrontGenerator {
                 "\n" +
                 "\n" +
                 "  edit(item) {\n" +
-                "    this.#LowerCase = item;\n" +
+                "    this.#LowerCase = JSON.parse(JSON.stringify(item));\n" +
+                "    this.convertDateFields();\n" +
                 "  }\n" +
                 "\n" +
                 "\n" +
@@ -116,12 +120,21 @@ public class FrontGenerator {
                 "    this.#LowerCase = new Object();\n" +
                 "  }\n" +
                 "\n" +
-                "   confirm() {\n" +
+                "   convertDateFields() {\n");
+
+                fields.forEach((k, v) -> {
+                    if(k.toLowerCase().contains("date")) {
+                        content.append("            this.#LowerCase." + k + " = moment(this.#LowerCase." + k + ")\n");
+                    }
+                });
+                content.append("  }\n" +
+                "\n" +
+                "   confirm(item) {\n" +
                 "        this.confirmationService.confirm({\n" +
                 "            message: 'آیا مطمئن هستید؟',\n" +
                 "            accept: () => {\n" +
                 "                // Actual logic to perform a confirmation\n" +
-                "               this.delete(this.#LowerCase.id);\n" +
+                "               this.delete(item.id);\n" +
                 "            }\n" +
                 "        });\n" +
                 "    }");
@@ -186,7 +199,7 @@ public class FrontGenerator {
     }
 
     public static String generateEntityHtmlView(String path, String entityName, String entityFarsiName, Map<String, String> fields, Map<String, String> farsiFieldsNames) throws FileNotFoundException {
-        StringBuilder content = new StringBuilder("<p-growl></p-growl>\n" +
+        StringBuilder content = new StringBuilder("<p-toast [style]=\"{marginTop: '30px'}\" position=\"top-center\" ></p-toast>\n" +
                 "<div class=\"main-content\">\n" +
                 "\n" +
                 "  <div class=\"ui-rtl\" dir=\"rtl\">\n" +
@@ -223,20 +236,15 @@ public class FrontGenerator {
         });
         content.append(
                 "      <div class=\"row\" style=\"margin-top: 30px;\">\n" +
-                        "        <div class=\"col-lg-4\">\n" +
+                        "        <div class=\"col-lg-12\">\n" +
                         "          <button type=\"button\" *ngIf=\"this.#LowerCase.id\" (click)=\"clear()\" class=\"btn btn-info\">جدید</button>\n" +
-                        "        </div>\n" +
-                        "        <div class=\"col-lg-4\">\n" +
-                        "          <button type=\"button\" *ngIf=\"this.#LowerCase.id\" (click)=\"confirm()\" class=\"btn btn-danger\">حذف</button>\n" +
-                        "        </div>\n" +
-                        "        <div class=\"col-lg-4\">\n" +
+                        "          <button type=\"button\" *ngIf=\"this.#LowerCase.id\" (click)=\"confirm(#LowerCase)\" class=\"btn btn-danger\">حذف</button>\n" +
                         "          <button type=\"button\" (click)=\"save()\" class=\"btn btn-info\">ذخیره</button>\n" +
                         "        </div>\n" +
                         "      </div>\n" +
                         "\n" +
                         "      <div class=\"row\" *ngIf=\"items\" style=\"margin-top: 5px;\">\n" +
                         "        <p-table [value]=\"items.data\" [responsive]=\"true\" [paginator]=\"true\" (onLazyLoad)=\"loadItems($event)\"\n" +
-                        "                 [paginator]=\"true\"\n" +
                         "                 [rows]=\"20\" [totalRecords]=\"items.count\" emptymessage=\"درخواستی یافت نشد\">\n" +
                         "          <ng-template pTemplate=\"header\">\n" +
                         "            <tr>\n");
@@ -252,19 +260,20 @@ public class FrontGenerator {
                 "            <tr>\n");
         content.append("              <td colspan=\"1\">{{i+1}}</td>\n");
         fields.forEach((k, v) -> {
-            if(v.toLowerCase().contains("Date".toLowerCase())) {
+            if (v.toLowerCase().contains("Date".toLowerCase())) {
                 content.append("              <td colspan=\"2\">{{item." + k + " | jalalitime }} </td>\n");
+//                content.append("              <td colspan=\"2\">{{item." + k + "}} </td>\n");
             } else {
                 content.append("              <td colspan=\"2\">{{item." + k + "}} </td>\n");
             }
         });
-        content.append("              <td colspan=\"2\">" +
+        content.append("              <td colspan=\"2\">\n" +
                 "               <button type=\"button\" (click)=\"edit(item)\" class=\"btn btn-info\">ویرایش</button>\n" +
-                "           </td>\n");
+                "              </td>\n");
 
-        content.append("              <td colspan=\"2\">" +
-                "               <button type=\"button\" (click)=\"delete(item.id)\" class=\"btn btn-danger\">حذف</button>\n" +
-                "           </td>\n");
+        content.append("              <td colspan=\"2\">\n" +
+                "               <button type=\"button\" (click)=\"confirm(item)\" class=\"btn btn-danger\">حذف</button>\n" +
+                "              </td>\n");
 
         content.append("            </tr>\n" +
                 "          </ng-template>\n" +
@@ -295,20 +304,20 @@ public class FrontGenerator {
 
     public static String refactorAppModule(String path, List<String> entityNames) throws IOException {
         path += "src\\app\\app.module.ts";
-        String content = new String ( Files.readAllBytes( Paths.get(path) ) );
+        String content = new String(Files.readAllBytes(Paths.get(path)));
 
         String oldDecleration = "LoginComponent,";
 
         StringBuilder refactoredDecleration = new StringBuilder(
                 "LoginComponent,\n");
-                entityNames.forEach(e -> {
-                    refactoredDecleration.append("    " + e + "Component,\n");
-                });
+        entityNames.forEach(e -> {
+            refactoredDecleration.append("    " + e + "Component,\n");
+        });
 
         content = content.replace(oldDecleration, refactoredDecleration);
 
 
-        StringBuilder oldImport = new StringBuilder("import {LoginService} from './login/login.service';\n");
+        StringBuilder oldImport = new StringBuilder("import {LoginService} from './login/login.service';");
         StringBuilder refactoredImport = new StringBuilder("import {LoginService} from './login/login.service';\n");
         entityNames.forEach(e -> {
             refactoredImport.append("import {").append(e).append("Service} from './").append(GeneratorTools.camelToDashedSnake(e)).append("/").append(GeneratorTools.camelToSnake(e)).append(".service';\n");
@@ -322,6 +331,157 @@ public class FrontGenerator {
             out.print(content);
         }
         return content;
+    }
+
+    public static String generateRouter(String path, List<String> entities) throws FileNotFoundException {
+        StringBuilder content = new StringBuilder("import {NgModule} from '@angular/core';\n" +
+                "import {CommonModule, } from '@angular/common';\n" +
+                "import {BrowserModule} from '@angular/platform-browser';\n" +
+                "import {Routes, RouterModule} from '@angular/router';\n" +
+                "import {DashboardComponent} from './dashboard/dashboard.component';\n" +
+                "import {InnerComponent} from './inner/inner.component';\n" +
+                "import {LoginComponent} from './login/login.component';\n");
+        entities.forEach(e -> {
+            content.append("import {" + e + "Component} from './" + GeneratorTools.camelToDashedSnake(e) + "/" + GeneratorTools.camelToSnake(e) + ".component';\n");
+        });
+
+        content.append("\n" +
+                "\n" +
+                "const routes: Routes = [\n" +
+                "    {\n" +
+                "        path: '',\n" +
+                "        redirectTo: 'login',\n" +
+                "        pathMatch: 'full'\n" +
+                "    },\n" +
+                "    {\n" +
+                "      path: 'login',\n" +
+                "      component: LoginComponent,\n" +
+                "      pathMatch: 'full'\n" +
+                "    },\n" +
+                "    {\n" +
+                "        path: 'inner',\n" +
+                "        component: InnerComponent,\n" +
+                "        children: [\n" +
+                "          {\n" +
+                "            path: 'dashboard',\n" +
+                "            component: DashboardComponent\n" +
+                "          },\n");
+
+        entities.forEach(e -> {
+            content.append("          {\n" +
+                    "            path: '" + GeneratorTools.camelToDashedSnake(e) + "',\n" +
+                    "            component: " + e + "Component\n" +
+                    "          },\n");
+        });
+        content.append("        ]\n" +
+                "    },\n" +
+                "\n" +
+                "];\n" +
+                "\n" +
+                "@NgModule({\n" +
+                "    imports: [\n" +
+                "        CommonModule,\n" +
+                "        BrowserModule,\n" +
+                "        RouterModule.forRoot(routes)\n" +
+                "    ],\n" +
+                "    exports: [\n" +
+                "        RouterModule\n" +
+                "    ],\n" +
+                "})\n" +
+                "export class AppRoutingModule {\n" +
+                "}\n");
+
+        path += "src\\app\\app.routing.ts";
+        File file = new File(path);
+        file.delete();
+        String result = content.toString();
+        try (PrintStream out = new PrintStream(new FileOutputStream(path))) {
+            out.print(result);
+        }
+        return result;
+    }
+
+    public static String generateSidebarComponent(String path, List<String> entities, LinkedHashMap<String, String> entityFarsiNames) throws FileNotFoundException {
+        StringBuilder content = new StringBuilder("import {Component, OnInit} from '@angular/core';\n" +
+                "import {AuthService} from '../../http-interceptor/auth.service';\n" +
+                "\n" +
+                "declare const $: any;\n" +
+                "\n" +
+                "declare interface RouteInfo {\n" +
+                "  path: string;\n" +
+                "  title: string;\n" +
+                "  icon: string;\n" +
+                "  class: string;\n" +
+                "  children?: RouteInfo[];\n" +
+                "  showChildren?: boolean;\n" +
+                "}\n" +
+                "// {path: 'dashboard', title: 'داشبورد', icon: 'dashboard', class: ''},\n" +
+                "export const ROUTES: RouteInfo[] = [\n" +
+                "  {path: 'dashboard', title: 'داشبورد', icon: 'dashboard', class: ''},\n");
+
+                entities.forEach(e -> {
+                    content.append("  {path: '").append(GeneratorTools.camelToDashedSnake(e)).append("', title: '").append(entityFarsiNames.get(e)).append("', icon: 'dashboard', class: ''},\n");
+                });
+
+                content.append("  {path: '#', title: 'راهنما', icon: '', class: '', children: [\n" +
+                "\n" +
+                "    ]},\n" +
+                "  {path: '#', title: 'پشتیبانی', icon: '', class: '', children: [\n" +
+                "\n" +
+                "    ]}\n" +
+                "\n" +
+                "];\n" +
+                "\n" +
+                "@Component({\n" +
+                "  selector: 'app-sidebar',\n" +
+                "  templateUrl: './sidebar.component.html',\n" +
+                "  styleUrls: ['./sidebar.component.css']\n" +
+                "})\n" +
+                "export class SidebarComponent implements OnInit {\n" +
+                "  menuItems: any[];\n" +
+                "\n" +
+                "  constructor(private authService: AuthService) {\n" +
+                "  }\n" +
+                "\n" +
+                "  ngOnInit() {\n" +
+                "    this.menuItems = ROUTES.filter(menuItem => menuItem);\n" +
+                "\n" +
+                "  }\n" +
+                "\n" +
+                "  isMobileMenu() {\n" +
+                "    if (window.screen.width > 991) {\n" +
+                "      return false;\n" +
+                "    }\n" +
+                "    return true;\n" +
+                "  }\n" +
+                "\n" +
+                "  activateChild(item: RouteInfo) {\n" +
+                "    item.showChildren = !item.showChildren;\n" +
+                "    console.log('item.showChildren', item.showChildren);\n" +
+                "  }\n" +
+                "\n" +
+                "  logout() {\n" +
+                "    this.authService.logout();\n" +
+                "  }\n" +
+                "\n" +
+                "  getRouterLinkActive(item: any) {\n" +
+                "\n" +
+                "    if (item.children) {\n" +
+                "      return '';\n" +
+                "    } else {\n" +
+                "      return 'active';\n" +
+                "    }\n" +
+                "  }\n" +
+                "}\n");
+
+        path += "src\\app\\components\\sidebar\\sidebar.component.ts";
+        File file = new File(path);
+        file.delete();
+        String result = content.toString();
+        try (PrintStream out = new PrintStream(new FileOutputStream(path))) {
+            out.print(result);
+        }
+        return result;
     }
 
 

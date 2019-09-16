@@ -136,7 +136,7 @@ public class AEFGenerator {
         }
 
         entityNameList.stream().forEach(entityName -> {
-            Map<String, String> fields = findFieldsForEntity(entityName);
+            LinkedHashMap<String, String> fields = findFieldsForEntity(entityName);
             try {
                 if(checkGeneration("generate.entity")) {
                     generateEntity(basePackage, entityName, fields, modelPath.getPath());
@@ -170,6 +170,8 @@ public class AEFGenerator {
             }
         });
         FrontGenerator.refactorAppModule(frontProjectPath, entityNameList);
+        FrontGenerator.generateRouter(frontProjectPath, entityNameList);
+        FrontGenerator.generateSidebarComponent(frontProjectPath, entityNameList, farsiNames);
 
 
 
@@ -436,11 +438,11 @@ public class AEFGenerator {
         return false;
     }
 
-    private static Map<String, String> findFieldsForEntity(String entityName) {
+    private static LinkedHashMap<String, String> findFieldsForEntity(String entityName) {
         Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
         List<String> keyList = Collections.list(keys);
 
-        Map<String, String> fields = new HashMap<>();
+        LinkedHashMap<String, String> fields = new LinkedHashMap<>();
 
         keyList.stream().forEach(k -> {
             if(k.contains(entityName + ".field.type.")) {
@@ -689,7 +691,7 @@ public class AEFGenerator {
         return result;
     }
 
-    public static String generateEntity(String basePackage, String entityName, Map<String, String> fields, String targetPath) throws FileNotFoundException {
+    public static String generateEntity(String basePackage, String entityName, LinkedHashMap<String, String> fields, String targetPath) throws FileNotFoundException {
         StringBuilder content = new StringBuilder("package #package.model;\n" +
                 "\n" +
                 "import com.aef3.data.api.DomainEntity;\n" +
@@ -946,7 +948,7 @@ public class AEFGenerator {
 
     }
 
-    private static String generateDto(String basePackage, String entityName, Map<String, String> fieldMap, String targetPath, boolean validationEnabled) throws FileNotFoundException {
+    private static String generateDto(String basePackage, String entityName, LinkedHashMap<String, String> fieldMap, String targetPath, boolean validationEnabled) throws FileNotFoundException {
         String result = generateDtoHeader();
         result += generateDtoFields(fieldMap, validationEnabled, entityName);
         result += generateDtoMappings(fieldMap, entityName);
@@ -987,7 +989,7 @@ public class AEFGenerator {
 
     }
 
-    private static String generateDtoFields(Map<String, String> fields, boolean validationEnabled, String entityName) {
+    private static String generateDtoFields(LinkedHashMap<String, String> fields, boolean validationEnabled, String entityName) {
 
         StringBuilder content = new StringBuilder();
 
@@ -1048,7 +1050,7 @@ public class AEFGenerator {
 
     }
 
-    private static String generateDtoMappings(Map<String, String> fields, String entityName) {
+    private static String generateDtoMappings(LinkedHashMap<String, String> fields, String entityName) {
 
         String firstChar = entityName.substring(0, 1);
         String entityInstanceName = entityName.replaceFirst(firstChar, firstChar.toLowerCase());
@@ -1143,7 +1145,7 @@ public class AEFGenerator {
 
     }
 
-    private static void generateRestService(String basePackage, String entityName, Map<String, String> fieldMap, String targetPath) throws FileNotFoundException {
+    private static void generateRestService(String basePackage, String entityName, LinkedHashMap<String, String> fieldMap, String targetPath) throws FileNotFoundException {
 
         String firstChar = entityName.substring(0, 1);
         String entityInstanceName = entityName.replaceFirst(firstChar, firstChar.toLowerCase());
@@ -1205,7 +1207,7 @@ public class AEFGenerator {
         return content;
     }
 
-    private static String generateRestGetMethods(Map<String, String> fields, String entity) {
+    private static String generateRestGetMethods(LinkedHashMap<String, String> fields, String entity) {
 
         StringBuilder content = new StringBuilder(
                 "\n\n");
