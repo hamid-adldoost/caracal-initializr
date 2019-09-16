@@ -214,12 +214,16 @@ public class AEFGenerator {
         String content = "package #package.rest;\n" +
                 "\n" +
                 "import #package.jwt.SecurityWrapper;\n" +
+                "import org.springframework.http.HttpHeaders;\n" +
+                "import #package.jwt.JWTUserDetails;\n" +
+                "import #package.jwt.JWTUtil;\n" +
                 "import #package.service.SecurityService;\n" +
                 "import org.springframework.beans.factory.annotation.Autowired;\n" +
                 "import org.springframework.web.bind.annotation.PostMapping;\n" +
                 "import org.springframework.web.bind.annotation.RequestMapping;\n" +
                 "import org.springframework.web.bind.annotation.RequestParam;\n" +
                 "import org.springframework.web.bind.annotation.RestController;\n" +
+                "import javax.servlet.http.HttpServletResponse;\n" +
                 "\n" +
                 "@RestController\n" +
                 "@RequestMapping(path = \"/auth\")\n" +
@@ -234,7 +238,8 @@ public class AEFGenerator {
                 "\n" +
                 "    @PostMapping(path = \"/login\")\n" +
                 "    public SecurityWrapper login(@RequestParam(name = \"username\") String username,\n" +
-                "                                 @RequestParam(name = \"password\") String password) {\n" +
+                "                                 @RequestParam(name = \"password\") String password,\n" +
+                "                                 final HttpServletResponse response) {\n" +
                 "\n" +
                 "        SecurityWrapper securityWrapper = securityService.authenticate(username, password);\n" +
                 "        JWTUserDetails userDetails = new JWTUserDetails(securityWrapper);\n" +
@@ -243,7 +248,7 @@ public class AEFGenerator {
                 "        String token = JWTUtil.generateToken(userDetails);\n" +
                 "        // Return the token on the response\n" +
                 "        response.setHeader(HttpHeaders.AUTHORIZATION, \"Bearer \" + token);\n" +
-                "        return securityWrapper;" +
+                "        return securityWrapper;\n" +
                 "    }\n" +
                 "}\n";
         String result = content.replaceAll("#package", basePackage);
@@ -401,6 +406,9 @@ public class AEFGenerator {
                 "\n" +
                 "\n" +
                 "\n" +
+                "import java.util.ArrayList;\n" +
+                "import java.util.List;\n" +
+                "\n" +
                 "public class AccessRoles {\n" +
                 "\n";
 
@@ -410,7 +418,21 @@ public class AEFGenerator {
                     content += "    public static final String ROLE_SAVE_" + camelToSnake(e).toUpperCase() + " = \"ROLE_SAVE_" + camelToSnake(e).toUpperCase() + "\";\n";
                     content += "    public static final String ROLE_REMOVE_" + camelToSnake(e).toUpperCase() + " = \"ROLE_REMOVE_" + camelToSnake(e).toUpperCase() + "\";\n";
                 }
+
+                content += "\n\n";
+                content += "    public static List<String> getAllRoles() {\n";
+                content += "        List<String> roles = new ArrayList<>();\n";
+                for (String e : entities) {
+                    content += "        roles.add(ROLE_FIND_" + camelToSnake(e).toUpperCase() + ");\n";
+                    content += "        roles.add(ROLE_SEARCH_" + camelToSnake(e).toUpperCase() + ");\n";
+                    content += "        roles.add(ROLE_SAVE_" + camelToSnake(e).toUpperCase() + ");\n";
+                    content += "        roles.add(ROLE_REMOVE_" + camelToSnake(e).toUpperCase() + ");\n";
+                }
+                content += "    return roles;";
+                content += "    }\n";
                 content += "}\n";
+
+
 
         String result = content.replaceAll("#package", basePackage);
 
@@ -1969,6 +1991,17 @@ public class AEFGenerator {
                 "    private List<String> permissions;\n" +
                 "\n" +
                 "\n" +
+                "   public JWTUserDetails() {\n" +
+                "\n" +
+                "    }\n" +
+                "\n" +
+                "    public JWTUserDetails(SecurityWrapper securityWrapper) {\n" +
+                "        this.username = securityWrapper.getUsername();\n" +
+                "        this.setCreationDate(null);\n" +
+                "        this.setPermissions(securityWrapper.getPermissions());\n" +
+                "        this.setRoles(securityWrapper.getRoles());\n" +
+                "    }\n" +
+                "\n" +
                 "    public String getUsername() {\n" +
                 "        return username;\n" +
                 "    }\n" +
@@ -2440,6 +2473,7 @@ public class AEFGenerator {
                 "\n" +
                 "import java.util.ArrayList;\n" +
                 "import java.util.Collections;\n" +
+                "import #package.security.AccessRoles;\n" +
                 "\n" +
                 "@Service\n" +
                 "public class SecurityService {\n" +
@@ -2454,7 +2488,7 @@ public class AEFGenerator {
                 "            securityWrapper.setSecure(true);\n" +
                 "            securityWrapper.setUsername(\"admin\");\n" +
                 "            securityWrapper.setPermissions(new ArrayList<>());\n" +
-                "            securityWrapper.setRoles(Collections.singletonList(\"user\"));\n" +
+                "            securityWrapper.setRoles(AccessRoles.getAllRoles());\n" +
                 "            return securityWrapper;\n" +
                 "        }\n" +
                 "        else\n" +
