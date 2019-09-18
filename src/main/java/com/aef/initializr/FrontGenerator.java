@@ -103,7 +103,7 @@ public class FrontGenerator {
                 "  }\n" +
                 "\n" +
                 "  delete(id: number) {\n" +
-                "    this.#LowerCaseService.delete(id, 'remove').subscribe(res => {\n" +
+                "    this.#LowerCaseService.delete(id, 'delete').subscribe(res => {\n" +
                 "      this.commonService.showDeleteMessage();\n" +
                 "      this.loadItems(null);\n" +
                 "    });\n" +
@@ -214,7 +214,7 @@ public class FrontGenerator {
                             "        <div class=\"col-lg-4\">\n" +
                             "\n" +
                             "        </div>\n" +
-                            "        <div class=\"col-lg-4\" style=\"text-align: center;\">\n");
+                            "        <div class=\"col-lg-4\" style=\"text-align: right;\">\n");
 
             if (v.toLowerCase().contains("Date".toLowerCase())) {
                 content.append("        <dp-date-picker \n" +
@@ -225,7 +225,11 @@ public class FrontGenerator {
                         "                theme=\"dp-material\">\n" +
                         "          </dp-date-picker>\n");
             } else {
-                content.append("          <input pInputText type=\"text\" [(ngModel)]=\"#LowerCase." + k + "\" >\n");
+                content.append("          <input pInputText type=\"text\" [(ngModel)]=\"#LowerCase." + k + "\"");
+                        if(GeneratorTools.isInteger(v)) {
+                            content.append(" pKeyFilter=\"int\" ");
+                        }
+                        content.append(" >\n");
             }
             content.append("        </div>\n");
             content.append("        <div class=\"col-lg-4\">\n" +

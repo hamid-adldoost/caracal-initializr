@@ -30,4 +30,15 @@ public class GeneratorTools {
         String firstChar = str.substring(0, 1);
         return str.replaceFirst(firstChar, firstChar.toLowerCase());
     }
+
+    public static boolean isInteger(String type) {
+        switch (type) {
+            case "Integer":
+            case "int":
+            case "Long":
+            case "long":
+                return true;
+        }
+        return false;
+    }
 }

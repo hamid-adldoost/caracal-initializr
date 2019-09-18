@@ -29,6 +29,7 @@ public class AEFGenerator {
 
         String frontProjectName = InitializrReaderUtility.getResourceProperity("front.project.name");
         String frontProjectPath = InitializrReaderUtility.getResourceProperity("front.target.path");
+        String frontProjectFarsiPath = InitializrReaderUtility.getResourceProperity("front.project.farsi.name");
 
         List<String> entities = findEntities();
         LinkedHashMap<String, String> farsiNames = findEntitiesFarsiNames();
