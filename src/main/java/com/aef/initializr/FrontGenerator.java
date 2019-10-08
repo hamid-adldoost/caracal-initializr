@@ -39,6 +39,58 @@ public class FrontGenerator {
         }
     }
 
+    public static String generateProxyConf(String path, String contextPath, String backendPort) throws FileNotFoundException {
+
+        path += "proxy.conf.json";
+        File file = new File(path);
+        String content = "{\n" +
+                "  \"#contextPath\": {\n" +
+                "    \"target\": \"http://localhost:#backendPort/\",\n" +
+                "    \"secure\": false,\n" +
+                "    \"logLevel\" : \"debug\"\n" +
+                "  }\n" +
+                "\n" +
+                "}";
+        try (PrintStream out = new PrintStream(new FileOutputStream(path))) {
+
+            content = content.replace("#contextPath", contextPath).replace("#backendPort", backendPort);
+            out.print(content);
+        }
+        return content;
+    }
+
+    public static String generateEnvironment(String path, String contextPath) throws FileNotFoundException {
+
+        path += "src/environments/environment.ts";
+        File file = new File(path);
+        String content = "export const environment = {\n" +
+                "  production: false,\n" +
+                "  baseServiceUrl: '#contextPath',\n" +
+                "};";
+        try (PrintStream out = new PrintStream(new FileOutputStream(path))) {
+
+            content = content.replace("#contextPath", contextPath);
+            out.print(content);
+        }
+        return content;
+    }
+
+    public static String generateProductionEnvironment(String path, String contextPath) throws FileNotFoundException {
+
+        path += "src/environments/environment.prod.ts";
+        File file = new File(path);
+        String content = "export const environment = {\n" +
+                "  production: true,\n" +
+                "  baseServiceUrl: '#contextPath',\n" +
+                "};";
+        try (PrintStream out = new PrintStream(new FileOutputStream(path))) {
+
+            content = content.replace("#contextPath", contextPath);
+            out.print(content);
+        }
+        return content;
+    }
+
     public static String generateEntityComponent(String path, String entityName, String entityFarsiName, Map<String, String> fields) throws FileNotFoundException {
 
         StringBuilder content = new StringBuilder("import { Component, OnInit } from '@angular/core';\n" +
@@ -210,11 +262,13 @@ public class FrontGenerator {
                 "\n");
         fields.forEach((k, v) -> {
             content.append(
-                    "      <div class=\"row\" style=\"direction: rtl\">\n" +
-                            "        <div class=\"col-lg-4\">\n" +
-                            "\n" +
-                            "        </div>\n" +
-                            "        <div class=\"col-lg-4\" style=\"text-align: right;\">\n");
+                    "      <div class=\"row\" style=\"direction: rtl\">\n");
+            content.append("        <div class=\"col-lg-4\">\n" +
+                    "\n" +
+                    "       " + farsiFieldsNames.get(k) + "\n" +
+                    "        </div>\n");
+            content.append("        <div class=\"col-lg-4\" style=\"text-align: right;\">\n");
+
 
             if (v.toLowerCase().contains("Date".toLowerCase())) {
                 content.append("        <dp-date-picker \n" +
@@ -232,11 +286,12 @@ public class FrontGenerator {
                         content.append(" >\n");
             }
             content.append("        </div>\n");
-            content.append("        <div class=\"col-lg-4\">\n" +
-                    "\n" +
-                    "       " + farsiFieldsNames.get(k) + "\n" +
-                    "        </div>\n" +
-                    "    </div>\n");
+            content.append(
+                    "        <div class=\"col-lg-4\">\n" +
+                            "\n" +
+                            "        </div>\n");
+            content.append("    </div>\n");
+
         });
         content.append(
                 "      <div class=\"row\" style=\"margin-top: 30px;\">\n" +

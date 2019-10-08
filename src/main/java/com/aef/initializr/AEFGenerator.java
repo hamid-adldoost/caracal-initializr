@@ -1,7 +1,7 @@
 package com.aef.initializr;
 
+
 import com.google.common.base.CaseFormat;
-import javafx.util.Pair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -173,6 +173,9 @@ public class AEFGenerator {
         FrontGenerator.refactorAppModule(frontProjectPath, entityNameList);
         FrontGenerator.generateRouter(frontProjectPath, entityNameList);
         FrontGenerator.generateSidebarComponent(frontProjectPath, entityNameList, farsiNames);
+        FrontGenerator.generateProxyConf(frontProjectPath, contextPath, portNumber);
+        FrontGenerator.generateEnvironment(frontProjectPath, contextPath);
+        FrontGenerator.generateProductionEnvironment(frontProjectPath, contextPath);
 
 
 
@@ -1431,20 +1434,26 @@ public class AEFGenerator {
                 "\n" +
                 "import java.util.Enumeration;\n" +
                 "import java.util.ResourceBundle;\n" +
+                "import java.io.UnsupportedEncodingException;" +
                 "\n" +
                 "public class ErrorCodeReaderUtil {\n" +
                 "\n" +
                 "    static ResourceBundle rb = ResourceBundle.getBundle(\"errorcodes\");\n" +
                 "\n" +
                 "    public static String getResourceProperity(String key)  {\n" +
-                "            return rb.getString(key);\n" +
-                "\n" +
+                "        String val = rb.getString(key);\n" +
+                "        try {\n" +
+                "            val = new String(val.getBytes(\"ISO-8859-1\"), \"UTF-8\");\n" +
+                "        } catch (UnsupportedEncodingException e) {\n" +
+                "            e.printStackTrace();\n" +
+                "        }\n" +
+                "        return val;\n" +
                 "    }\n" +
                 "\n" +
                 "    public static Enumeration<String> getResourceKeys(String key) {\n" +
                 "            return rb.getKeys();\n" +
                 "    }\n" +
-                "}";
+                "}\n";
 
         String result = content.replaceAll("#package", basePackage);
 
