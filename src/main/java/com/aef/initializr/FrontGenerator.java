@@ -196,8 +196,13 @@ public class FrontGenerator {
             }
         });
 
-        content.append("  save() {\n" +
-                "    this.#LowerCaseService.create(this.#LowerCase, 'save').subscribe(res => {\n" +
+        content.append("  save() {\n");
+        fields.forEach((k, v) -> {
+                if(v.contains("DropDown")) {
+                    content.append("        this.#LowerCase." + k + " = this.#LowerCase." + k + ".value;\n");
+                }
+                });
+                content.append("    this.#LowerCaseService.create(this.#LowerCase, 'save').subscribe(res => {\n" +
                 "      this.#LowerCase = res;\n" +
                 "      this.loadItems(null);\n" +
                 "      this.commonService.showSubmitMessage();\n" +
@@ -331,7 +336,7 @@ public class FrontGenerator {
                         "          </dp-date-picker>\n");
             } else if (v.toLowerCase().contains("DropDown".toLowerCase())) {
 
-                content.append("          <p-dropdown [options]=\"" + k + "options\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"label\" ></p-dropdown>\n");
+                content.append("          <p-dropdown [options]=\"" + k + "options\" dataKey=\"value\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"label\" ></p-dropdown>\n");
             } else if (AEFGenerator.getBaseTypes().contains(v)) {
                 content.append("          <input pInputText type=\"text\" [(ngModel)]=\"#LowerCase." + k + "\"");
                 if (GeneratorTools.isInteger(v)) {
