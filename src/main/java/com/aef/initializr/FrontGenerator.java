@@ -1,5 +1,10 @@
 package com.aef.initializr;
 
+import com.aef.initializr.types.DropDownType;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.json.JsonParser;
+import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.util.ResourceUtils;
 
 import java.io.*;
@@ -119,6 +124,23 @@ public class FrontGenerator {
 //                fields.forEach((k, v) -> {
 //                    content.append("\n   " + k + " : any;");
 //                });
+
+
+
+        fields.forEach((k, v) -> {
+            if(v.toLowerCase().contains("DropDown".toLowerCase())) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                int start = v.indexOf("[");
+                int end = v.indexOf("]");
+                String json = v.substring(start, end+1);
+                try {
+                    DropDownType[] list = objectMapper.readValue(json, DropDownType[].class);
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+                content.append("  " + k + "options = " + json.replace("\"", "'") + "\n");
+            }
+        });
 
         content.append(
                 "   #LowerCase: any;\n" +
@@ -278,12 +300,15 @@ public class FrontGenerator {
                         "                placeholder=\"تاریخ\"\n" +
                         "                theme=\"dp-material\">\n" +
                         "          </dp-date-picker>\n");
+            } else if(v.toLowerCase().contains("DropDown".toLowerCase())){
+
+                content.append("          <p-dropdown [options]=\"" + k + "options\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"label\" ></p-dropdown>\n");
             } else {
                 content.append("          <input pInputText type=\"text\" [(ngModel)]=\"#LowerCase." + k + "\"");
-                        if(GeneratorTools.isInteger(v)) {
-                            content.append(" pKeyFilter=\"int\" ");
-                        }
-                        content.append(" >\n");
+                if(GeneratorTools.isInteger(v)) {
+                    content.append(" pKeyFilter=\"int\" ");
+                }
+                content.append(" >\n");
             }
             content.append("        </div>\n");
             content.append(

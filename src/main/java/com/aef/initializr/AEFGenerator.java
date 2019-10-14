@@ -747,28 +747,42 @@ public class AEFGenerator {
             }
 
             else {
-                if(getBaseTypes().contains(entry.getValue())) {
+                if(entry.getValue().toLowerCase().contains("DropDown".toLowerCase())) {
                     content.append("    @Column(name = \"").append(camelToSnake(entry.getKey())).append("\"");
                     if(!findFieldNullability(entityName, entry.getKey())) {
                         content.append(", nullable = " + false );
                     }
-                    //no need to write true, its default value
-//                    {
-//                        content.append(", nullable = " + true );
-//                    }
                     String length = findFieldLength(entityName, entry.getKey());
                     if(length != null) {
                         content.append(", length = ").append(length);
                     }
                     content.append(")\n");
-                    if(entry.getValue().equals("Date")) {
-                        content.append("    @Temporal(TemporalType.TIMESTAMP)\n");
-                    }
+                    content.append("    private Long").append(" ").append(entry.getKey()).append(";\n");
                 } else {
-                    content.append("    @JoinColumn(name = \"").append(camelToSnake(entry.getKey())).append("\", referencedColumnName = \"id\")\n")
-                            .append("    @ManyToOne\n");
+                    if(getBaseTypes().contains(entry.getValue())) {
+                        content.append("    @Column(name = \"").append(camelToSnake(entry.getKey())).append("\"");
+                        if(!findFieldNullability(entityName, entry.getKey())) {
+                            content.append(", nullable = " + false );
+                        }
+                        //no need to write true, its default value
+//                    {
+//                        content.append(", nullable = " + true );
+//                    }
+                        String length = findFieldLength(entityName, entry.getKey());
+                        if(length != null) {
+                            content.append(", length = ").append(length);
+                        }
+                        content.append(")\n");
+                        if(entry.getValue().equals("Date")) {
+                            content.append("    @Temporal(TemporalType.TIMESTAMP)\n");
+                        }
+                    } else {
+                        content.append("    @JoinColumn(name = \"").append(camelToSnake(entry.getKey())).append("\", referencedColumnName = \"id\")\n")
+                                .append("    @ManyToOne\n");
+                    }
+                    content.append("    private ").append(entry.getValue()).append(" ").append(entry.getKey()).append(";\n");
                 }
-                content.append("    private ").append(entry.getValue()).append(" ").append(entry.getKey()).append(";\n");
+
             }
         }
 
@@ -778,14 +792,27 @@ public class AEFGenerator {
         {
             String firstCharFieldName = entry.getKey().substring(0, 1);
             String upperCaseCharFieldName = entry.getKey().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
-            content.append("\n")
-                    .append("    public ").append(entry.getValue()).append(" get").append(upperCaseCharFieldName).append("() {\n")
-                    .append("        return ").append(entry.getKey()).append(";\n")
-                    .append("    }\n")
-                    .append("\n")
-                    .append("    public void set").append(upperCaseCharFieldName).append("(").append(entry.getValue()).append(" ").append(entry.getKey()).append(") {\n")
-                    .append("       this.").append(entry.getKey()).append(" = ").append(entry.getKey()).append(";\n")
-                    .append("    }\n\n");
+
+            if(entry.getValue().toLowerCase().contains("DropDown".toLowerCase())) {
+                content.append("\n")
+                        .append("    public Long get").append(upperCaseCharFieldName).append("() {\n")
+                        .append("        return ").append(entry.getKey()).append(";\n")
+                        .append("    }\n")
+                        .append("\n")
+                        .append("    public void set").append(upperCaseCharFieldName).append("(").append("Long ").append(entry.getKey()).append(") {\n")
+                        .append("       this.").append(entry.getKey()).append(" = ").append(entry.getKey()).append(";\n")
+                        .append("    }\n\n");
+            } else {
+
+                content.append("\n")
+                        .append("    public ").append(entry.getValue()).append(" get").append(upperCaseCharFieldName).append("() {\n")
+                        .append("        return ").append(entry.getKey()).append(";\n")
+                        .append("    }\n")
+                        .append("\n")
+                        .append("    public void set").append(upperCaseCharFieldName).append("(").append(entry.getValue()).append(" ").append(entry.getKey()).append(") {\n")
+                        .append("       this.").append(entry.getKey()).append(" = ").append(entry.getKey()).append(";\n")
+                        .append("    }\n\n");
+            }
         }
         content.append("\n");
 
@@ -1034,7 +1061,9 @@ public class AEFGenerator {
                     }
                 }
                 content.append("\n    private ").append(entry.getValue()).append(" ").append(entry.getKey()).append(";");
-            } else {
+            } else if(entry.getValue().toLowerCase().contains("DropDown".toLowerCase())) {
+                content.append("\n    private Long").append(" ").append(entry.getKey()).append(";");
+            } else{
                 content.append("\n    private ").append(entry.getValue() + "Dto").append(" ").append(entry.getKey()).append(";");
             }
         }
@@ -1047,7 +1076,16 @@ public class AEFGenerator {
             String firstCharFieldName = entry.getKey().substring(0, 1);
             String upperCaseCharFieldName = entry.getKey().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
 
-            if(getBaseTypes().contains(entry.getValue())) {
+            if(entry.getValue().toLowerCase().contains("DropDown".toLowerCase())) {
+                content.append("\n")
+                        .append("    public Long get").append(upperCaseCharFieldName).append("() {\n")
+                        .append("        return ").append(entry.getKey()).append(";\n")
+                        .append("    }\n")
+                        .append("\n")
+                        .append("    public void set").append(upperCaseCharFieldName).append("(").append("Long ").append(entry.getKey()).append(") {\n")
+                        .append("       this.").append(entry.getKey()).append(" = ").append(entry.getKey()).append(";\n")
+                        .append("    }\n\n");
+            } else if(getBaseTypes().contains(entry.getValue())) {
                 content.append("\n    public " + entry.getValue() + " get" + upperCaseCharFieldName + "() {\n" +
                         "        return " + entry.getKey() + ";\n" +
                         "    }\n" +
@@ -1097,7 +1135,10 @@ public class AEFGenerator {
         {
             String firstCharFieldName = entry.getKey().substring(0, 1);
             String upperCaseCharFieldName = entry.getKey().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
-            if(getBaseTypes().contains(entry.getValue())) {
+            if(entry.getValue().toLowerCase().contains("DropDown".toLowerCase())) {
+                content.append("\n        dto.set").append(upperCaseCharFieldName).append("(").append(entityInstanceName).append(".get").append(upperCaseCharFieldName).append("()").append(");");
+            }
+            else if(getBaseTypes().contains(entry.getValue())) {
                 content.append("\n        dto.set").append(upperCaseCharFieldName).append("(").append(entityInstanceName).append(".get").append(upperCaseCharFieldName).append("()").append(");");
             }
             else {
@@ -1129,6 +1170,9 @@ public class AEFGenerator {
             String firstCharFieldName = entry.getKey().substring(0, 1);
             String upperCaseCharFieldName = entry.getKey().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
             if(getBaseTypes().contains(entry.getValue())) {
+                content.append("\n        #entity.set").append(upperCaseCharFieldName).append("(").append("dto").append(".get").append(upperCaseCharFieldName).append("()").append(");");
+            }
+            else if(entry.getValue().toLowerCase().contains("DropDown".toLowerCase())) {
                 content.append("\n        #entity.set").append(upperCaseCharFieldName).append("(").append("dto").append(".get").append(upperCaseCharFieldName).append("()").append(");");
             }
             else {
