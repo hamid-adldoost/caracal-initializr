@@ -161,7 +161,7 @@ public class AEFGenerator {
                     generateRestService(basePackage, entityName, fields, restPath.getPath());
                 }
 
-                FrontGenerator.generateEntityComponent(frontProjectPath , entityName, entityName, fields);
+                FrontGenerator.generateEntityComponent(entityNameList, frontProjectPath , entityName, entityName, fields);
                 FrontGenerator.generateEntityService(frontProjectPath , entityName);
                 FrontGenerator.generateEntityHtmlView(frontProjectPath, entityName, farsiNames.get(entityName), fields, farsiFields.get(entityName));
 
@@ -2914,6 +2914,17 @@ public class AEFGenerator {
         typeNames.add("decimal");
         typeNames.add("byte");
         typeNames.add("byte[]");
+        return typeNames;
+    }
+
+    public static List<String> getComponentTypes() {
+        List<String> typeNames = new ArrayList<>();
+        typeNames.add("DropDown");
+        typeNames.add("RadioButtonList");
+        typeNames.add("CheckBoxList");
+        typeNames.add("RadioButton");
+        typeNames.add("CheckBox");
+
         return typeNames;
     }
 

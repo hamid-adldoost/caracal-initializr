@@ -96,15 +96,21 @@ public class FrontGenerator {
         return content;
     }
 
-    public static String generateEntityComponent(String path, String entityName, String entityFarsiName, Map<String, String> fields) throws FileNotFoundException {
+    public static String generateEntityComponent(List<String> entitiesList, String path, String entityName, String entityFarsiName, Map<String, String> fields) throws FileNotFoundException {
 
         StringBuilder content = new StringBuilder("import { Component, OnInit } from '@angular/core';\n" +
                 "import {#EntityService} from './#entity.service';\n" +
                 "import {QueryOptions} from '../general/query-options';\n" +
                 "import {MessageService} from 'primeng/api';\n" +
                 "import {CommonService} from '../common.service';\n" +
-                "import * as moment from 'jalali-moment';\n" +
-                "import {ConfirmationService} from 'primeng/api';\n" +
+                "import * as moment from 'jalali-moment';\n");
+
+        fields.forEach((k, v) -> {
+            if (entitiesList.contains(v)) {
+                content.append("import {" + v + "Service} from '../" + v.toLowerCase() + "/" + v.toLowerCase() + ".service'; \n");
+            }
+        });
+        content.append("import {ConfirmationService} from 'primeng/api';\n" +
                 "\n" +
                 "@Component({\n" +
                 "  selector: 'app-#entity',\n" +
@@ -115,30 +121,29 @@ public class FrontGenerator {
                 "\n" +
                 "  constructor(private #LowerCaseService: #EntityService,\n" +
                 "              private messageService: MessageService,\n" +
-                "              private commonService: CommonService,\n" +
-                "              private confirmationService: ConfirmationService) { \n" +
+                "              private commonService: CommonService,\n");
+        fields.forEach((k, v) -> {
+            if (entitiesList.contains(v)) {
+                content.append("                private " + v.toLowerCase() + "Service: " + v + "Service,\n");
+            }
+        });
+        content.append("              private confirmationService: ConfirmationService) { \n" +
                 "\n" +
                 "   }\n" +
                 "\n" + "");
 
-//                fields.forEach((k, v) -> {
-//                    content.append("\n   " + k + " : any;");
-//                });
-
-
-
         fields.forEach((k, v) -> {
-            if(v.toLowerCase().contains("DropDown".toLowerCase())) {
+            if (v.toLowerCase().contains("DropDown".toLowerCase())) {
                 ObjectMapper objectMapper = new ObjectMapper();
                 int start = v.indexOf("[");
                 int end = v.indexOf("]");
-                String json = v.substring(start, end+1);
+                String json = v.substring(start, end + 1);
                 try {
                     DropDownType[] list = objectMapper.readValue(json, DropDownType[].class);
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
-                content.append("  " + k + "options = " + json.replace("\"", "'") + "\n");
+                content.append("   " + k + "options = " + json.replace("\"", "'") + "\n");
             }
         });
 
@@ -146,15 +151,27 @@ public class FrontGenerator {
                 "   #LowerCase: any;\n" +
                         "\n" +
                         "\n" +
-                        "  items = {data: [], count : 0};" +
-                        "\n" +
-                        "  ngOnInit() {\n" +
-                        "    this.#LowerCase =  new Object();\n" +
-                        "    this.#LowerCaseService.list(new QueryOptions(), 'search').subscribe(res => {\n" +
-                        "      console.log('list call res', res);\n" +
-                        "      this.items = res;\n" +
-                        "    });\n" +
-                        "  }\n");
+                        "  items = {data: [], count : 0};\n");
+
+        fields.forEach((k, v) -> {
+            if (entitiesList.contains(v)) {
+                content.append("  " + k + "List = [];\n");
+            }
+        });
+
+        content.append("\n" +
+                "  ngOnInit() {\n" +
+                "    this.#LowerCase =  new Object();\n" +
+                "    this.#LowerCaseService.list(new QueryOptions(), 'search').subscribe(res => {\n" +
+                "      console.log('list call res', res);\n" +
+                "      this.items = res;\n");
+        content.append("    });\n");
+        fields.forEach((k, v) -> {
+            if (entitiesList.contains(v)) {
+                content.append("        this.fetch" + v + "List();\n");
+            }
+        });
+        content.append("  }\n");
 
         content.append("  loadItems(event: any) {\n" +
                 "    if (!event) {\n" +
@@ -166,13 +183,25 @@ public class FrontGenerator {
                 "      this.items = res;\n" +
                 "    });\n" +
                 "  }\n\n");
+        fields.forEach((k, v) -> {
+            if (entitiesList.contains(v)) {
+                content.append("  fetch" + v + "List() {\n" +
+                        "    let event = {first : 0, rows : 20};\n" +
+                        "    let query = new QueryOptions();\n" +
+                        "    query.options = [{key: 'firstIndex', value: event.first}, {key: 'pageSize', value: event.rows}];\n" +
+                        "    this." + v.toLowerCase() + "Service.list(query, 'search').subscribe(res => {\n" +
+                        "      this." + k + "List = res.data;\n" +
+                        "    });\n" +
+                        "  }\n\n");
+            }
+        });
 
         content.append("  save() {\n" +
                 "    this.#LowerCaseService.create(this.#LowerCase, 'save').subscribe(res => {\n" +
                 "      this.#LowerCase = res;\n" +
                 "      this.loadItems(null);\n" +
                 "      this.commonService.showSubmitMessage();\n" +
-                "      this.#LowerCase = new Object()\n" +
+                "      this.#LowerCase = new Object();\n" +
                 "    });\n" +
                 "  }\n" +
                 "\n" +
@@ -196,12 +225,12 @@ public class FrontGenerator {
                 "\n" +
                 "   convertDateFields() {\n");
 
-                fields.forEach((k, v) -> {
-                    if(k.toLowerCase().contains("date")) {
-                        content.append("            this.#LowerCase." + k + " = moment(this.#LowerCase." + k + ")\n");
-                    }
-                });
-                content.append("  }\n" +
+        fields.forEach((k, v) -> {
+            if (k.toLowerCase().contains("date")) {
+                content.append("            this.#LowerCase." + k + " = moment(this.#LowerCase." + k + ")\n");
+            }
+        });
+        content.append("  }\n" +
                 "\n" +
                 "   confirm(item) {\n" +
                 "        this.confirmationService.confirm({\n" +
@@ -300,15 +329,17 @@ public class FrontGenerator {
                         "                placeholder=\"تاریخ\"\n" +
                         "                theme=\"dp-material\">\n" +
                         "          </dp-date-picker>\n");
-            } else if(v.toLowerCase().contains("DropDown".toLowerCase())){
+            } else if (v.toLowerCase().contains("DropDown".toLowerCase())) {
 
                 content.append("          <p-dropdown [options]=\"" + k + "options\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"label\" ></p-dropdown>\n");
-            } else {
+            } else if (AEFGenerator.getBaseTypes().contains(v)) {
                 content.append("          <input pInputText type=\"text\" [(ngModel)]=\"#LowerCase." + k + "\"");
-                if(GeneratorTools.isInteger(v)) {
+                if (GeneratorTools.isInteger(v)) {
                     content.append(" pKeyFilter=\"int\" ");
                 }
                 content.append(" >\n");
+            } else {
+                content.append("          <p-dropdown [options]=\"" + k + "List\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"id\" ></p-dropdown>\n");
             }
             content.append("        </div>\n");
             content.append(
@@ -503,11 +534,11 @@ public class FrontGenerator {
                 "export const ROUTES: RouteInfo[] = [\n" +
                 "  {path: 'dashboard', title: 'داشبورد', icon: 'dashboard', class: ''},\n");
 
-                entities.forEach(e -> {
-                    content.append("  {path: '").append(GeneratorTools.camelToDashedSnake(e)).append("', title: '").append(entityFarsiNames.get(e)).append("', icon: 'dashboard', class: ''},\n");
-                });
+        entities.forEach(e -> {
+            content.append("  {path: '").append(GeneratorTools.camelToDashedSnake(e)).append("', title: '").append(entityFarsiNames.get(e)).append("', icon: 'dashboard', class: ''},\n");
+        });
 
-                content.append("  {path: '#', title: 'راهنما', icon: '', class: '', children: [\n" +
+        content.append("  {path: '#', title: 'راهنما', icon: '', class: '', children: [\n" +
                 "\n" +
                 "    ]},\n" +
                 "  {path: '#', title: 'پشتیبانی', icon: '', class: '', children: [\n" +
