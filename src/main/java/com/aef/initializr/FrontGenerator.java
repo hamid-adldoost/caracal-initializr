@@ -64,39 +64,7 @@ public class FrontGenerator {
         return content;
     }
 
-    public static String generateEnvironment(String path, String contextPath) throws FileNotFoundException {
-
-        path += "src/environments/environment.ts";
-        File file = new File(path);
-        String content = "export const environment = {\n" +
-                "  production: false,\n" +
-                "  baseServiceUrl: '#contextPath',\n" +
-                "};";
-        try (PrintStream out = new PrintStream(new FileOutputStream(path))) {
-
-            content = content.replace("#contextPath", contextPath);
-            out.print(content);
-        }
-        return content;
-    }
-
-    public static String generateProductionEnvironment(String path, String contextPath) throws FileNotFoundException {
-
-        path += "src/environments/environment.prod.ts";
-        File file = new File(path);
-        String content = "export const environment = {\n" +
-                "  production: true,\n" +
-                "  baseServiceUrl: '#contextPath',\n" +
-                "};";
-        try (PrintStream out = new PrintStream(new FileOutputStream(path))) {
-
-            content = content.replace("#contextPath", contextPath);
-            out.print(content);
-        }
-        return content;
-    }
-
-    public static String generateEntityComponent(List<String> entitiesList, String path, String entityName, String entityFarsiName, Map<String, String> fields) throws FileNotFoundException {
+    public static String generateEntityComponent(String path, String entityName, String entityFarsiName, Map<String, String> fields) throws FileNotFoundException {
 
         StringBuilder content = new StringBuilder("import { Component, OnInit } from '@angular/core';\n" +
                 "import {#EntityService} from './#entity.service';\n" +
@@ -184,7 +152,15 @@ public class FrontGenerator {
                 "    }\n" +
                 "    let query = new QueryOptions();\n" +
                 "    query.options = [{key: 'firstIndex', value: event.first}, {key: 'pageSize', value: event.rows}];\n" +
-                "    this.#LowerCaseService.list(query, 'search').subscribe(res => {\n" +
+                "    if (event.filters) {\n" +
+                "      console.log('filters', event.filters);\n");
+        fields.forEach((k, v) -> {
+            content.append("            if (event.filters." + k + ") {\n" +
+                    "               query.options.push({key: '" + k + "', value: '" + v + "'})\n" +
+                    "            }\n");
+        });
+        content.append("    }\n");
+        content.append("    this.#LowerCaseService.list(query, 'search').subscribe(res => {\n" +
                 "      this.items = res;\n" +
                 "    });\n" +
                 "  }\n\n");
@@ -280,7 +256,9 @@ public class FrontGenerator {
             out.print(result);
         }
         try (PrintStream out = new PrintStream(new FileOutputStream(path + "/" + GeneratorTools.camelToSnake(entityName).toLowerCase() + ".component.css"))) {
-            out.print("");
+            out.print(".filterInput {\n" +
+                    "  width: 80%;\n" +
+                    "}");
         }
         return result;
 
@@ -386,8 +364,24 @@ public class FrontGenerator {
         });
         content.append("              <th colspan=\"2\">ویرایش</th>\n");
         content.append("              <th colspan=\"2\">حذف</th>\n");
-        content.append("            </tr>\n" +
-                "          </ng-template>\n" +
+        content.append("            </tr>\n");
+
+        content.append("            <tr>\n");
+        content.append("              <th colspan=\"1\">#</th>\n");
+        fields.forEach((k, v) -> {
+            if(!v.toLowerCase().contains("date".toLowerCase())) {
+                content.append("              <th colspan=\"2\"><input class=\"filterInput\" pInputText type=\"text\" (input)=\"dt.filter($event.target.value, '" + k + "', 'in')\"></th>\n");
+            }
+            else {
+                content.append("              <th colspan=\"2\"></th>\n");
+            }
+        });
+        content.append("              <th colspan=\"2\"></th>\n");
+        content.append("              <th colspan=\"2\"></th>\n");
+        content.append("            </tr>\n");
+
+
+        content.append("          </ng-template>\n" +
                 "          <ng-template pTemplate=\"body\" let-item let-i=\"rowIndex\">\n" +
                 "            <tr>\n");
         content.append("              <td colspan=\"1\">{{i+1}}</td>\n");
