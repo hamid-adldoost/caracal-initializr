@@ -164,9 +164,9 @@ public class AEFGenerator {
                     generateRestService(basePackage, entityName, fields, restPath.getPath());
                 }
 
-                FrontGenerator.generateEntityComponent(entityNameList, frontProjectPath , entityName, entityName, fields);
+                FrontGenerator.generateEntityComponent(entityNameList, frontProjectPath , entityName, entityName, fields, entityLabels);
                 FrontGenerator.generateEntityService(frontProjectPath , entityName);
-                FrontGenerator.generateEntityHtmlView(frontProjectPath, entityName, farsiNames.get(entityName), fields, farsiFields.get(entityName), entityLabels);
+                FrontGenerator.generateEntityHtmlView(frontProjectPath, entityName, farsiNames.get(entityName), fields, farsiFields.get(entityName), entityLabels, entityNameList);
 
 
             } catch (FileNotFoundException e) {

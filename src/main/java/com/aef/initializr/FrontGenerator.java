@@ -64,7 +64,39 @@ public class FrontGenerator {
         return content;
     }
 
-    public static String generateEntityComponent(String path, String entityName, String entityFarsiName, Map<String, String> fields) throws FileNotFoundException {
+    public static String generateEnvironment(String path, String contextPath) throws FileNotFoundException {
+
+        path += "src/environments/environment.ts";
+        File file = new File(path);
+        String content = "export const environment = {\n" +
+                "  production: false,\n" +
+                "  baseServiceUrl: '#contextPath',\n" +
+                "};";
+        try (PrintStream out = new PrintStream(new FileOutputStream(path))) {
+
+            content = content.replace("#contextPath", contextPath);
+            out.print(content);
+        }
+        return content;
+    }
+
+    public static String generateProductionEnvironment(String path, String contextPath) throws FileNotFoundException {
+
+        path += "src/environments/environment.prod.ts";
+        File file = new File(path);
+        String content = "export const environment = {\n" +
+                "  production: true,\n" +
+                "  baseServiceUrl: '#contextPath',\n" +
+                "};";
+        try (PrintStream out = new PrintStream(new FileOutputStream(path))) {
+
+            content = content.replace("#contextPath", contextPath);
+            out.print(content);
+        }
+        return content;
+    }
+
+    public static String generateEntityComponent(List<String> entitiesList, String path, String entityName, String entityFarsiName, Map<String, String> fields, Map<String, String> entityLabels) throws FileNotFoundException {
 
         StringBuilder content = new StringBuilder("import { Component, OnInit } from '@angular/core';\n" +
                 "import {#EntityService} from './#entity.service';\n" +
@@ -171,6 +203,7 @@ public class FrontGenerator {
                         "    let query = new QueryOptions();\n" +
                         "    query.options = [{key: 'firstIndex', value: event.first}, {key: 'pageSize', value: event.rows}];\n" +
                         "    this." + v.toLowerCase() + "Service.list(query, 'search').subscribe(res => {\n" +
+//                        "      this." + k + "List = this.commonService.prepareListToDropdown(res.data, '" + entityLabels.get(v) + "');\n" +
                         "      this." + k + "List = res.data;\n" +
                         "    });\n" +
                         "  }\n\n");
@@ -296,7 +329,7 @@ public class FrontGenerator {
 
     }
 
-    public static String generateEntityHtmlView(String path, String entityName, String entityFarsiName, Map<String, String> fields, Map<String, String> farsiFieldsNames, Map<String, String> entityLabels) throws FileNotFoundException {
+    public static String generateEntityHtmlView(String path, String entityName, String entityFarsiName, Map<String, String> fields, Map<String, String> farsiFieldsNames, Map<String, String> entityLabels, List<String> entityNames) throws FileNotFoundException {
         StringBuilder content = new StringBuilder("<p-toast [style]=\"{marginTop: '30px'}\" position=\"top-center\" ></p-toast>\n" +
                 "<div class=\"main-content\">\n" +
                 "\n" +
@@ -326,7 +359,7 @@ public class FrontGenerator {
                         "          </dp-date-picker>\n");
             } else if (v.toLowerCase().contains("DropDown".toLowerCase())) {
 
-                content.append("          <p-dropdown [options]=\"" + k + "options\" dataKey=\"value\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"label\" dataKey=\"value\" ></p-dropdown>\n");
+                content.append("          <p-dropdown [options]=\"" + k + "options\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"label\" dataKey=\"value\" ></p-dropdown>\n");
             } else if (AEFGenerator.getBaseTypes().contains(v)) {
                 content.append("          <input pInputText type=\"text\" [(ngModel)]=\"#LowerCase." + k + "\"");
                 if (GeneratorTools.isInteger(v)) {
@@ -389,6 +422,8 @@ public class FrontGenerator {
             if (v.toLowerCase().contains("Date".toLowerCase())) {
                 content.append("              <td colspan=\"2\">{{item." + k + " | jalalitime }} </td>\n");
 //                content.append("              <td colspan=\"2\">{{item." + k + "}} </td>\n");
+            } else if(entityNames.contains(v)) {
+                content.append("              <td colspan=\"2\">{{item." + k + "." + entityLabels.get(v) + "}} </td>\n");
             } else {
                 content.append("              <td colspan=\"2\">{{item." + k + "}} </td>\n");
             }
