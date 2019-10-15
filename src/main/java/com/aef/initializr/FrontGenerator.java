@@ -107,7 +107,7 @@ public class FrontGenerator {
 
         fields.forEach((k, v) -> {
             if (entitiesList.contains(v)) {
-                content.append("import {" + v + "Service} from '../" + v.toLowerCase() + "/" + v.toLowerCase() + ".service'; \n");
+                content.append("import {").append(v).append("Service} from '../").append(v.toLowerCase()).append("/").append(v.toLowerCase()).append(".service'; \n");
             }
         });
         content.append("import {ConfirmationService} from 'primeng/api';\n" +
@@ -160,8 +160,13 @@ public class FrontGenerator {
         });
 
         content.append("\n" +
-                "  ngOnInit() {\n" +
-                "    this.#LowerCase =  new Object();\n" +
+                "  ngOnInit() {\n");
+        fields.forEach((k, v) -> {
+            if (v.contains("DropDown")) {
+                content.append("    this." + k + "options = this.commonService.preparePureListToDropdown(this." + k + "options);\n");
+            }
+        });
+        content.append("    this.#LowerCase =  new Object();\n" +
                 "    this.#LowerCaseService.list(new QueryOptions(), 'search').subscribe(res => {\n" +
                 "      console.log('list call res', res);\n" +
                 "      this.items = res;\n");
@@ -198,11 +203,13 @@ public class FrontGenerator {
 
         content.append("  save() {\n");
         fields.forEach((k, v) -> {
-                if(v.contains("DropDown")) {
-                    content.append("        this.#LowerCase." + k + " = this.#LowerCase." + k + ".value;\n");
-                }
-                });
-                content.append("    this.#LowerCaseService.create(this.#LowerCase, 'save').subscribe(res => {\n" +
+            if (v.contains("DropDown")) {
+                content.append("    if(this.#LowerCase." + k + ") { \n");
+                content.append("        this.#LowerCase." + k + " = this.#LowerCase." + k + ".value;\n");
+                content.append("    }\n");
+            }
+        });
+        content.append("    this.#LowerCaseService.create(this.#LowerCase, 'save').subscribe(res => {\n" +
                 "      this.#LowerCase = res;\n" +
                 "      this.loadItems(null);\n" +
                 "      this.commonService.showSubmitMessage();\n" +
@@ -219,8 +226,13 @@ public class FrontGenerator {
                 "\n" +
                 "\n" +
                 "  edit(item) {\n" +
-                "    this.#LowerCase = JSON.parse(JSON.stringify(item));\n" +
-                "    this.convertDateFields();\n" +
+                "    this.#LowerCase = JSON.parse(JSON.stringify(item));\n");
+        fields.forEach((k, v) -> {
+            if (v.contains("DropDown")) {
+                content.append("    this.#LowerCase." + k + " = this." + k + "options.filter(v => v.value == this.#LowerCase." + k + ")[0];\n");
+            }
+        });
+        content.append("    this.convertDateFields();\n" +
                 "  }\n" +
                 "\n" +
                 "\n" +
@@ -344,7 +356,7 @@ public class FrontGenerator {
                 }
                 content.append(" >\n");
             } else {
-                content.append("          <p-dropdown [options]=\"" + k + "List\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"" + entityLabels.get(v)  + "\"  dataKey=\"value\" ></p-dropdown>\n");
+                content.append("          <p-dropdown [options]=\"" + k + "List\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"" + entityLabels.get(v) + "\"  dataKey=\"value\" ></p-dropdown>\n");
             }
             content.append("        </div>\n");
             content.append(
