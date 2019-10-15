@@ -33,6 +33,7 @@ public class AEFGenerator {
 
         List<String> entities = findEntities();
         LinkedHashMap<String, String> farsiNames = findEntitiesFarsiNames();
+        LinkedHashMap<String, String> entityLabels = findEntitiesLabels();
         LinkedHashMap<String, LinkedHashMap<String, String>> farsiFields = findFieldsFarsiNames();
 
 
@@ -56,7 +57,8 @@ public class AEFGenerator {
                 validationEnabled,
                 frontProjectPath,
                 farsiNames,
-                farsiFields);
+                farsiFields,
+                entityLabels);
 
 
 
@@ -79,7 +81,8 @@ public class AEFGenerator {
                                     boolean validationEnabled,
                                     String frontProjectPath,
                                     LinkedHashMap<String, String> farsiNames,
-                                    LinkedHashMap<String, LinkedHashMap<String, String>> farsiFields) throws IOException {
+                                    LinkedHashMap<String, LinkedHashMap<String, String>> farsiFields,
+                                    LinkedHashMap<String, String> entityLabels) throws IOException {
 
 
         generateStructureOfProject(projectName, basePackage, targetPath);
@@ -163,7 +166,7 @@ public class AEFGenerator {
 
                 FrontGenerator.generateEntityComponent(entityNameList, frontProjectPath , entityName, entityName, fields);
                 FrontGenerator.generateEntityService(frontProjectPath , entityName);
-                FrontGenerator.generateEntityHtmlView(frontProjectPath, entityName, farsiNames.get(entityName), fields, farsiFields.get(entityName));
+                FrontGenerator.generateEntityHtmlView(frontProjectPath, entityName, farsiNames.get(entityName), fields, farsiFields.get(entityName), entityLabels);
 
 
             } catch (FileNotFoundException e) {
@@ -507,6 +510,22 @@ public class AEFGenerator {
                 String[] parts = k.split("\\.");
                 String farsi = InitializrReaderUtility.getResourceProperity(k);
                 entities.put(parts[3], farsi);
+            }
+        });
+        return entities;
+    }
+
+    private static LinkedHashMap<String, String> findEntitiesLabels() {
+        Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
+        List<String> keyList = Collections.list(keys);
+
+        LinkedHashMap<String, String> entities = new LinkedHashMap<>();
+
+        keyList.stream().forEach(k -> {
+            if(k.contains("entity.label.")) {
+                String[] parts = k.split("\\.");
+                String label = InitializrReaderUtility.getResourceProperity(k);
+                entities.put(parts[2], label);
             }
         });
         return entities;

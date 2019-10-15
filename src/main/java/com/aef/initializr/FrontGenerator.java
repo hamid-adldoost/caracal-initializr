@@ -306,7 +306,7 @@ public class FrontGenerator {
 
     }
 
-    public static String generateEntityHtmlView(String path, String entityName, String entityFarsiName, Map<String, String> fields, Map<String, String> farsiFieldsNames) throws FileNotFoundException {
+    public static String generateEntityHtmlView(String path, String entityName, String entityFarsiName, Map<String, String> fields, Map<String, String> farsiFieldsNames, Map<String, String> entityLabels) throws FileNotFoundException {
         StringBuilder content = new StringBuilder("<p-toast [style]=\"{marginTop: '30px'}\" position=\"top-center\" ></p-toast>\n" +
                 "<div class=\"main-content\">\n" +
                 "\n" +
@@ -336,7 +336,7 @@ public class FrontGenerator {
                         "          </dp-date-picker>\n");
             } else if (v.toLowerCase().contains("DropDown".toLowerCase())) {
 
-                content.append("          <p-dropdown [options]=\"" + k + "options\" dataKey=\"value\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"label\" ></p-dropdown>\n");
+                content.append("          <p-dropdown [options]=\"" + k + "options\" dataKey=\"value\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"label\" dataKey=\"value\" ></p-dropdown>\n");
             } else if (AEFGenerator.getBaseTypes().contains(v)) {
                 content.append("          <input pInputText type=\"text\" [(ngModel)]=\"#LowerCase." + k + "\"");
                 if (GeneratorTools.isInteger(v)) {
@@ -344,7 +344,7 @@ public class FrontGenerator {
                 }
                 content.append(" >\n");
             } else {
-                content.append("          <p-dropdown [options]=\"" + k + "List\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"id\" ></p-dropdown>\n");
+                content.append("          <p-dropdown [options]=\"" + k + "List\" [(ngModel)]=\"#LowerCase." + k + "\" optionLabel=\"" + entityLabels.get(v)  + "\"  dataKey=\"value\" ></p-dropdown>\n");
             }
             content.append("        </div>\n");
             content.append(
