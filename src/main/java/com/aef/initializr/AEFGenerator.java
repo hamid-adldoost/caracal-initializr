@@ -1,94 +1,104 @@
 package com.aef.initializr;
 
 
+import com.aef.initializr.types.ComponentTypes;
+import com.aef.initializr.types.EntityDefinition;
+import com.aef.initializr.types.EntityFieldDefinition;
+import com.aef.initializr.types.SystemDefinition;
 import com.google.common.base.CaseFormat;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class AEFGenerator {
 
-    public static void main(String args[]) throws IOException {
+//    public static void main(String args[]) throws IOException {
+//
+//
+//        String dataSourceUrl = InitializrReaderUtility.getResourceProperity("datasource.url");
+//        String dataSourceUsername = InitializrReaderUtility.getResourceProperity("datasource.username");
+//        String dataSourcePassword = InitializrReaderUtility.getResourceProperity("datasource.password");
+//        String contextPath = InitializrReaderUtility.getResourceProperity("context.path");
+//        String portNumber = InitializrReaderUtility.getResourceProperity("port.number");
+//        String basePackage = InitializrReaderUtility.getResourceProperity("base.package");
+//        String targetPath = InitializrReaderUtility.getResourceProperity("target.path");
+//        String projectName = InitializrReaderUtility.getResourceProperity("project.name");
+//        String projectDescription = InitializrReaderUtility.getResourceProperity("project.description");
+//        String artifactId = InitializrReaderUtility.getResourceProperity("maven.artifact.id");
+//        String groupId = InitializrReaderUtility.getResourceProperity("maven.group.id");
+//        String jwtKey = InitializrReaderUtility.getResourceProperity("jwt.key");
+//        String jwtExpiration = InitializrReaderUtility.getResourceProperity("jwt.expiration");
+//        boolean validationEnabled = Boolean.parseBoolean(InitializrReaderUtility.getResourceProperity("validation.enabled"));
+//
+//        String frontProjectName = InitializrReaderUtility.getResourceProperity("front.project.name");
+//        String frontProjectPath = InitializrReaderUtility.getResourceProperity("front.target.path");
+//        String frontProjectFarsiPath = InitializrReaderUtility.getResourceProperity("front.project.farsi.name");
+//
+//        List<String> entities = findEntities();
+//        LinkedHashMap<String, String> farsiNames = findEntitiesFarsiNames();
+//        LinkedHashMap<String, String> entityLabels = findEntitiesLabels();
+//        LinkedHashMap<String, LinkedHashMap<String, String>> farsiFields = findFieldsFarsiNames();
+//
+//
+//        FrontGenerator frontGenerator = new FrontGenerator();
+//        frontGenerator.generateStructureOfProject(frontProjectName, frontProjectPath);
+//
+//        generateAll(basePackage,
+//                entities,
+//                targetPath,
+//                projectName,
+//                projectDescription,
+//                artifactId,
+//                groupId,
+//                dataSourceUrl,
+//                dataSourceUsername,
+//                dataSourcePassword,
+//                contextPath,
+//                portNumber,
+//                jwtKey,
+//                jwtExpiration,
+//                validationEnabled,
+//                frontProjectPath,
+//                farsiNames,
+//                farsiFields,
+//                entityLabels);
+//
+//
+//    }
+
+//    public static void generateAll(String basePackage,
+//                                   List<String> entityNameList,
+//                                   String targetPath,
+//                                   String projectName,
+//                                   String projectDescription,
+//                                   String artifcatId,
+//                                   String groupId,
+//                                   String dataSourceUrl,
+//                                   String dataSourceUsername,
+//                                   String dataSourcePassword,
+//                                   String contextPath,
+//                                   String portNumber,
+//                                   String jwtKey,
+//                                   String jwtExpiration,
+//                                   boolean validationEnabled,
+//                                   String frontProjectPath,
+//                                   LinkedHashMap<String, String> farsiNames,
+//                                   LinkedHashMap<String, LinkedHashMap<String, String>> farsiFields,
+//                                   LinkedHashMap<String, String> entityLabels) throws IOException {
+
+    public void generateAll(SystemDefinition systemDefinition) throws IOException {
 
 
-        String dataSourceUrl = InitializrReaderUtility.getResourceProperity("datasource.url");
-        String dataSourceUsername = InitializrReaderUtility.getResourceProperity("datasource.username");
-        String dataSourcePassword = InitializrReaderUtility.getResourceProperity("datasource.password");
-        String contextPath = InitializrReaderUtility.getResourceProperity("context.path");
-        String portNumber = InitializrReaderUtility.getResourceProperity("port.number");
-        String basePackage = InitializrReaderUtility.getResourceProperity("base.package");
-        String targetPath = InitializrReaderUtility.getResourceProperity("target.path");
-        String projectName = InitializrReaderUtility.getResourceProperity("project.name");
-        String projectDescription = InitializrReaderUtility.getResourceProperity("project.description");
-        String artifactId = InitializrReaderUtility.getResourceProperity("maven.artifact.id");
-        String groupId = InitializrReaderUtility.getResourceProperity("maven.group.id");
-        String jwtKey = InitializrReaderUtility.getResourceProperity("jwt.key");
-        String jwtExpiration = InitializrReaderUtility.getResourceProperity("jwt.expiration");
-        boolean validationEnabled = Boolean.parseBoolean(InitializrReaderUtility.getResourceProperity("validation.enabled"));
+        generateStructureOfProject(systemDefinition.getBackendConfig().getMavenConfig().getProjectName(),
+                systemDefinition.getBackendConfig().getBasePackage(),
+                systemDefinition.getBackendConfig().getTargetPath());
+        String sourcePackageTarget = generateSourceTargetPackagePath(systemDefinition.getBackendConfig().getTargetPath(),
+                systemDefinition.getBackendConfig().getBasePackage(),
+                systemDefinition.getBackendConfig().getMavenConfig().getProjectName());
 
-        String frontProjectName = InitializrReaderUtility.getResourceProperity("front.project.name");
-        String frontProjectPath = InitializrReaderUtility.getResourceProperity("front.target.path");
-        String frontProjectFarsiPath = InitializrReaderUtility.getResourceProperity("front.project.farsi.name");
-
-        List<String> entities = findEntities();
-        LinkedHashMap<String, String> farsiNames = findEntitiesFarsiNames();
-        LinkedHashMap<String, String> entityLabels = findEntitiesLabels();
-        LinkedHashMap<String, LinkedHashMap<String, String>> farsiFields = findFieldsFarsiNames();
-
-
-        FrontGenerator frontGenerator = new FrontGenerator();
-        frontGenerator.generateStructureOfProject(frontProjectName, frontProjectPath);
-
-        generateAll(basePackage,
-                entities,
-                targetPath,
-                projectName,
-                projectDescription,
-                artifactId,
-                groupId,
-                dataSourceUrl,
-                dataSourceUsername,
-                dataSourcePassword,
-                contextPath,
-                portNumber,
-                jwtKey,
-                jwtExpiration,
-                validationEnabled,
-                frontProjectPath,
-                farsiNames,
-                farsiFields,
-                entityLabels);
-
-
-
-    }
-
-    public static void generateAll( String basePackage,
-                                    List<String> entityNameList,
-                                    String targetPath,
-                                    String projectName,
-                                    String projectDescription,
-                                    String artifcatId,
-                                    String groupId,
-                                    String dataSourceUrl,
-                                    String dataSourceUsername,
-                                    String dataSourcePassword,
-                                    String contextPath,
-                                    String portNumber,
-                                    String jwtKey,
-                                    String jwtExpiration,
-                                    boolean validationEnabled,
-                                    String frontProjectPath,
-                                    LinkedHashMap<String, String> farsiNames,
-                                    LinkedHashMap<String, LinkedHashMap<String, String>> farsiFields,
-                                    LinkedHashMap<String, String> entityLabels) throws IOException {
-
-
-        generateStructureOfProject(projectName, basePackage, targetPath);
-        String sourcePackageTarget = generateSourceTargetPackagePath(targetPath, basePackage, projectName);
-
-        File modelPath = new File( sourcePackageTarget + "/model");
+        File modelPath = new File(sourcePackageTarget + "/model");
         File daoPath = new File(sourcePackageTarget + "/dao");
         File servicePath = new File(sourcePackageTarget + "/service");
         File dtoPath = new File(sourcePackageTarget + "/dto");
@@ -96,7 +106,8 @@ public class AEFGenerator {
         File commonPath = new File(sourcePackageTarget + "/common");
         File jwtPath = new File(sourcePackageTarget + "/jwt");
         File securityPath = new File(sourcePackageTarget + "/security");
-        File rootPath = new File(targetPath + "/" + projectName);
+        File rootPath = new File(systemDefinition.getBackendConfig().getTargetPath()
+                + "/" + systemDefinition.getBackendConfig().getMavenConfig().getProjectName());
         File resourcePath = new File(rootPath.getPath() + "/src/main/resources");
 
         modelPath.mkdirs();
@@ -109,81 +120,57 @@ public class AEFGenerator {
         rootPath.mkdirs();
         resourcePath.mkdirs();
 
+        List<String> entityNameList = systemDefinition.getEntityDefinitionList().stream()
+                .map(EntityDefinition::getName).collect(Collectors.toList());
 
-        if(checkGeneration("generate.pom")) {
-            generatePOMFile(rootPath.getPath(), projectName, projectDescription, artifcatId, groupId);
+
+        if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateMaven()) {
+            generatePOMFile(rootPath.getPath(), systemDefinition.getBackendConfig().getMavenConfig().getProjectName(),
+                    systemDefinition.getBackendConfig().getMavenConfig().getProjectDescription(),
+                    systemDefinition.getBackendConfig().getMavenConfig().getMavenArtifactId(),
+                    systemDefinition.getBackendConfig().getMavenConfig().getMavenGroupId());
         }
 
-        if(checkGeneration("generate.runner")) {
-            generateRunnerClass(sourcePackageTarget, basePackage, projectName);
+        if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateRunnerClass()) {
+            generateRunnerClass(sourcePackageTarget,
+                    systemDefinition.getBackendConfig().getBasePackage(),
+                    systemDefinition.getBackendConfig().getMavenConfig().getProjectName());
         }
 
-        if(checkGeneration("generate.properties")) {
-            generateApplicationDotPropertiesFile(resourcePath.getPath(), dataSourceUrl, dataSourceUsername, dataSourcePassword, contextPath, portNumber);
+        if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGeneratePropertiesFile()) {
+            generateApplicationDotPropertiesFile(resourcePath.getPath(),
+                    systemDefinition.getBackendConfig().getDatabaseConnection().getDatasourceUrl(),
+                    systemDefinition.getBackendConfig().getDatabaseConnection().getDatasourceUsername(),
+                    systemDefinition.getBackendConfig().getDatabaseConnection().getDatasourcePassword(),
+                    systemDefinition.getBackendConfig().getContextPath(),
+                    systemDefinition.getBackendConfig().getBackendPortNumber(),
+                    systemDefinition.getBackendConfig().getBasePackage());
         }
 
 
-        if(checkGeneration("generate.config")) {
-            generateConfigPropertiesFile(resourcePath.getPath(), jwtKey, jwtExpiration);
+        if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateConfigPropertiesFile()) {
+            generateConfigPropertiesFile(resourcePath.getPath(),
+                    systemDefinition.getBackendConfig().getSecurityConfig().getJwtKey(),
+                    systemDefinition.getBackendConfig().getSecurityConfig().getTokenExpiration());
         }
 
-        if(checkGeneration("generate.errorcodes")) {
+        if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateErrorCodeFile()) {
             generateErrorCodeProperties(resourcePath.getPath());
         }
 
-        if(checkGeneration("generate.security.config")) {
-            generateSecurityConfig(basePackage, securityPath.getPath());
+        if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateSecurityConfigClass()) {
+            generateSecurityConfig(systemDefinition.getBackendConfig().getBasePackage(), securityPath.getPath());
         }
 
-        if(checkGeneration("generate.security.roles")) {
-            generateAccessRoles(basePackage, securityPath.getPath());
+        if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateSecurityAuthorities()) {
+            generateSecurityAuthorities(systemDefinition.getBackendConfig().getBasePackage(),
+                    securityPath.getPath(), entityNameList);
         }
 
-        entityNameList.stream().forEach(entityName -> {
-            LinkedHashMap<String, String> fields = findFieldsForEntity(entityName);
-            try {
-                if(checkGeneration("generate.entity")) {
-                    generateEntity(basePackage, entityName, fields, modelPath.getPath());
-                }
-                if(checkGeneration("generate.dto")) {
-                    generateDto(basePackage, entityName, fields, dtoPath.getPath(), validationEnabled);
-                }
-                if(checkGeneration("generate.dao")) {
-                    generateDao(basePackage, entityName, daoPath.getPath());
-                }
-                if(checkGeneration("generate.service")) {
-                    generateService(basePackage, entityName, servicePath.getPath());
-                }
-                if(checkGeneration("generate.general.service")) {
-                    //fill service package
-                    generateGeneralServiceInterface(servicePath.getPath(), basePackage);
-                    generateGeneralServiceImplClass(servicePath.getPath(), basePackage);
-                    generatePagedResultClass(servicePath.getPath(), basePackage);
-                }
-                if(checkGeneration("generate.rest")) {
-                    generateRestService(basePackage, entityName, fields, restPath.getPath());
-                }
-
-                FrontGenerator.generateEntityComponent(entityNameList, frontProjectPath , entityName, entityName, fields, entityLabels);
-                FrontGenerator.generateEntityService(frontProjectPath , entityName);
-                FrontGenerator.generateEntityHtmlView(frontProjectPath, entityName, farsiNames.get(entityName), fields, farsiFields.get(entityName), entityLabels, entityNameList);
-
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        });
-        FrontGenerator.refactorAppModule(frontProjectPath, entityNameList);
-        FrontGenerator.generateRouter(frontProjectPath, entityNameList);
-        FrontGenerator.generateSidebarComponent(frontProjectPath, entityNameList, farsiNames);
-        FrontGenerator.generateProxyConf(frontProjectPath, contextPath, portNumber);
-        FrontGenerator.generateEnvironment(frontProjectPath, contextPath);
-        FrontGenerator.generateProductionEnvironment(frontProjectPath, contextPath);
-
-
+        String basePackage = systemDefinition.getBackendConfig().getBasePackage();
 
         //fill common package
-        if(checkGeneration("generate.common")){
+        if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateCommonClasses()) {
             generateBusinessExceptionCodeClass(commonPath.getPath(), basePackage);
             generateConfigReaderUtilClass(commonPath.getPath(), basePackage);
             generateAEFExceptionHandler(commonPath.getPath(), basePackage);
@@ -196,7 +183,7 @@ public class AEFGenerator {
         }
 
         //fill jwt package
-        if(checkGeneration("generate.jwt")) {
+        if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateJwtClasses()) {
             generateCustomClaims(jwtPath.getPath(), basePackage);
             generateJwtAuthenticationEntryClass(jwtPath.getPath(), basePackage);
             generateJwtAuthenticationFilterClass(jwtPath.getPath(), basePackage);
@@ -208,12 +195,56 @@ public class AEFGenerator {
             generateTokenRepository(jwtPath.getPath(), basePackage);
         }
 
-        if(checkGeneration("generate.security.service")) {
+        if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateSecurityService()) {
             generateSecurityServiceClass(servicePath.getPath(), basePackage);
         }
-        if(checkGeneration("generate.login.rest")) {
+        if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateLoginRest()) {
             generateLoginRestService(restPath.getPath(), basePackage);
         }
+
+        systemDefinition.getEntityDefinitionList().forEach(entity -> {
+            try {
+                if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateEntities()) {
+                    generateEntity(basePackage, entity, modelPath.getPath());
+                }
+                if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateDto()) {
+                    generateDto(basePackage, entity, dtoPath.getPath(), entityNameList);
+                }
+                if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateDao()) {
+                    generateDao(basePackage, entity.getName(), daoPath.getPath());
+                }
+                if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateService()) {
+                    generateService(basePackage, entity.getName(), servicePath.getPath());
+                }
+                if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateGeneralService()) {
+                    //fill service package
+                    generateGeneralServiceInterface(servicePath.getPath(), basePackage);
+                    generateGeneralServiceImplClass(servicePath.getPath(), basePackage);
+                    generatePagedResultClass(servicePath.getPath(), basePackage);
+                }
+                if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateRest()) {
+                    generateRestService(basePackage, entity, restPath.getPath(), systemDefinition.getBackendConfig().getBackendGenerationConfig().isGeneratePermissions());
+                }
+
+                FrontGenerator.generateEntityComponent(entityNameList, systemDefinition.getFrontendConfig().getTargetPath(), entity);
+                FrontGenerator.generateEntityService(systemDefinition.getFrontendConfig().getTargetPath(), entity.getName());
+                FrontGenerator.generateEntityHtmlView(systemDefinition.getFrontendConfig().getTargetPath(), systemDefinition, entity);
+
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        });
+        FrontGenerator.refactorAppModule(systemDefinition.getFrontendConfig().getTargetPath(), entityNameList);
+        FrontGenerator.generateRouter(systemDefinition.getFrontendConfig().getTargetPath(), entityNameList);
+        FrontGenerator.generateSidebarComponent(systemDefinition.getFrontendConfig().getTargetPath(), systemDefinition.getEntityDefinitionList());
+        FrontGenerator.generateProxyConf(systemDefinition.getFrontendConfig().getTargetPath(),
+                systemDefinition.getBackendConfig().getContextPath(),
+                systemDefinition.getBackendConfig().getBackendPortNumber());
+        FrontGenerator.generateEnvironment(systemDefinition.getFrontendConfig().getTargetPath(),
+                systemDefinition.getBackendConfig().getContextPath());
+        FrontGenerator.generateProductionEnvironment(systemDefinition.getFrontendConfig().getTargetPath(),
+                systemDefinition.getBackendConfig().getContextPath());
 
     }
 
@@ -403,10 +434,9 @@ public class AEFGenerator {
         return result;
     }
 
-    private static String generateAccessRoles(String basePackage, String path) throws FileNotFoundException {
+    private static String generateSecurityAuthorities(String basePackage, String path, List<String> entityNamesList) throws FileNotFoundException {
 
-        List<String> entities = findEntities();
-        if(entities == null || entities.isEmpty())
+        if (entityNamesList == null || entityNamesList.isEmpty())
             return null;
 
         String content = "package #package.security;\n" +
@@ -419,26 +449,25 @@ public class AEFGenerator {
                 "public class AccessRoles {\n" +
                 "\n";
 
-                for (String e : entities) {
-                    content += "    public static final String ROLE_FIND_" + camelToSnake(e).toUpperCase() + " = \"ROLE_FIND_" + camelToSnake(e).toUpperCase() + "\";\n";
-                    content += "    public static final String ROLE_SEARCH_" + camelToSnake(e).toUpperCase() + " = \"ROLE_SEARCH_" + camelToSnake(e).toUpperCase() + "\";\n";
-                    content += "    public static final String ROLE_SAVE_" + camelToSnake(e).toUpperCase() + " = \"ROLE_SAVE_" + camelToSnake(e).toUpperCase() + "\";\n";
-                    content += "    public static final String ROLE_REMOVE_" + camelToSnake(e).toUpperCase() + " = \"ROLE_REMOVE_" + camelToSnake(e).toUpperCase() + "\";\n";
-                }
+        for (String e : entityNamesList) {
+            content += "    public static final String AUTHORITY_FIND_" + camelToSnake(e).toUpperCase() + " = \"AUTHORITY_FIND_" + camelToSnake(e).toUpperCase() + "\";\n";
+            content += "    public static final String AUTHORITY_SEARCH_" + camelToSnake(e).toUpperCase() + " = \"AUTHORITY_SEARCH_" + camelToSnake(e).toUpperCase() + "\";\n";
+            content += "    public static final String AUTHORITY_SAVE_" + camelToSnake(e).toUpperCase() + " = \"AUTHORITY_SAVE_" + camelToSnake(e).toUpperCase() + "\";\n";
+            content += "    public static final String AUTHORITY_REMOVE_" + camelToSnake(e).toUpperCase() + " = \"AUTHORITY_REMOVE_" + camelToSnake(e).toUpperCase() + "\";\n";
+        }
 
-                content += "\n\n";
-                content += "    public static List<String> getAllRoles() {\n";
-                content += "        List<String> roles = new ArrayList<>();\n";
-                for (String e : entities) {
-                    content += "        roles.add(ROLE_FIND_" + camelToSnake(e).toUpperCase() + ");\n";
-                    content += "        roles.add(ROLE_SEARCH_" + camelToSnake(e).toUpperCase() + ");\n";
-                    content += "        roles.add(ROLE_SAVE_" + camelToSnake(e).toUpperCase() + ");\n";
-                    content += "        roles.add(ROLE_REMOVE_" + camelToSnake(e).toUpperCase() + ");\n";
-                }
-                content += "    return roles;";
-                content += "    }\n";
-                content += "}\n";
-
+        content += "\n\n";
+        content += "    public static List<String> getAllRoles() {\n";
+        content += "        List<String> roles = new ArrayList<>();\n";
+        for (String e : entityNamesList) {
+            content += "        roles.add(AUTHORITY_FIND_" + camelToSnake(e).toUpperCase() + ");\n";
+            content += "        roles.add(AUTHORITY_SEARCH_" + camelToSnake(e).toUpperCase() + ");\n";
+            content += "        roles.add(AUTHORITY_SAVE_" + camelToSnake(e).toUpperCase() + ");\n";
+            content += "        roles.add(AUTHORITY_REMOVE_" + camelToSnake(e).toUpperCase() + ");\n";
+        }
+        content += "    return roles;";
+        content += "    }\n";
+        content += "}\n";
 
 
         String result = content.replaceAll("#package", basePackage);
@@ -454,107 +483,107 @@ public class AEFGenerator {
 
     }
 
-    private static boolean checkGeneration(String key) {
+//    private static boolean checkGeneration(String key) {
+//
+//        try {
+//            String value = InitializrReaderUtility.getResourceProperity(key);
+//            if(value.equalsIgnoreCase("true"))
+//                return true;
+//
+//        } catch (Exception e) {
+//            return false;
+//        }
+//        return false;
+//    }
 
-        try {
-            String value = InitializrReaderUtility.getResourceProperity(key);
-            if(value.equalsIgnoreCase("true"))
-                return true;
+//    private static LinkedHashMap<String, String> findFieldsForEntity(String entityName) {
+//        Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
+//        List<String> keyList = Collections.list(keys);
+//
+//        LinkedHashMap<String, String> fields = new LinkedHashMap<>();
+//
+//        keyList.stream().forEach(k -> {
+//            if(k.contains(entityName + ".field.type.")) {
+//                String[] parts = k.split("\\.");
+//                String type = InitializrReaderUtility.getResourceProperity(k);
+//                fields.put(parts[3], type);
+//            }
+//        });
+//        return fields;
+//    }
 
-        } catch (Exception e) {
-            return false;
-        }
-        return false;
-    }
+//    private static List<String> findEntities() {
+//        Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
+//        List<String> keyList = Collections.list(keys);
+//
+//        List<String> entities = new ArrayList<>();
+//
+//        keyList.stream().forEach(k -> {
+//            if(k.contains("entity.name.")) {
+//                String[] parts = k.split("\\.");
+//                String type = InitializrReaderUtility.getResourceProperity(k);
+//                entities.add(parts[2]);
+//            }
+//        });
+//        return entities;
+//    }
 
-    private static LinkedHashMap<String, String> findFieldsForEntity(String entityName) {
-        Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
-        List<String> keyList = Collections.list(keys);
+//    private static LinkedHashMap<String, String> findEntitiesFarsiNames() {
+//        Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
+//        List<String> keyList = Collections.list(keys);
+//
+//        LinkedHashMap<String, String> entities = new LinkedHashMap<>();
+//
+//        keyList.stream().forEach(k -> {
+//            if(k.contains("entity.farsi.name.")) {
+//                String[] parts = k.split("\\.");
+//                String farsi = InitializrReaderUtility.getResourceProperity(k);
+//                entities.put(parts[3], farsi);
+//            }
+//        });
+//        return entities;
+//    }
 
-        LinkedHashMap<String, String> fields = new LinkedHashMap<>();
+//    private static LinkedHashMap<String, String> findEntitiesLabels() {
+//        Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
+//        List<String> keyList = Collections.list(keys);
+//
+//        LinkedHashMap<String, String> entities = new LinkedHashMap<>();
+//
+//        keyList.stream().forEach(k -> {
+//            if(k.contains("entity.label.")) {
+//                String[] parts = k.split("\\.");
+//                String label = InitializrReaderUtility.getResourceProperity(k);
+//                entities.put(parts[2], label);
+//            }
+//        });
+//        return entities;
+//    }
 
-        keyList.stream().forEach(k -> {
-            if(k.contains(entityName + ".field.type.")) {
-                String[] parts = k.split("\\.");
-                String type = InitializrReaderUtility.getResourceProperity(k);
-                fields.put(parts[3], type);
-            }
-        });
-        return fields;
-    }
-
-    private static List<String> findEntities() {
-        Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
-        List<String> keyList = Collections.list(keys);
-
-        List<String> entities = new ArrayList<>();
-
-        keyList.stream().forEach(k -> {
-            if(k.contains("entity.name.")) {
-                String[] parts = k.split("\\.");
-                String type = InitializrReaderUtility.getResourceProperity(k);
-                entities.add(parts[2]);
-            }
-        });
-        return entities;
-    }
-
-    private static LinkedHashMap<String, String> findEntitiesFarsiNames() {
-        Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
-        List<String> keyList = Collections.list(keys);
-
-        LinkedHashMap<String, String> entities = new LinkedHashMap<>();
-
-        keyList.stream().forEach(k -> {
-            if(k.contains("entity.farsi.name.")) {
-                String[] parts = k.split("\\.");
-                String farsi = InitializrReaderUtility.getResourceProperity(k);
-                entities.put(parts[3], farsi);
-            }
-        });
-        return entities;
-    }
-
-    private static LinkedHashMap<String, String> findEntitiesLabels() {
-        Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
-        List<String> keyList = Collections.list(keys);
-
-        LinkedHashMap<String, String> entities = new LinkedHashMap<>();
-
-        keyList.stream().forEach(k -> {
-            if(k.contains("entity.label.")) {
-                String[] parts = k.split("\\.");
-                String label = InitializrReaderUtility.getResourceProperity(k);
-                entities.put(parts[2], label);
-            }
-        });
-        return entities;
-    }
-
-    private static LinkedHashMap<String, LinkedHashMap<String, String>> findFieldsFarsiNames() {
-
-        List<String> entites = findEntities();
-        LinkedHashMap<String, LinkedHashMap<String, String>> result = new LinkedHashMap<>();
-
-        entites.forEach(e -> {
-            Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
-            List<String> keyList = Collections.list(keys);
-
-            LinkedHashMap<String, String> fields = new LinkedHashMap<>();
-
-            keyList.stream().forEach(k -> {
-                if(k.contains(e + ".field.farsi.")) {
-                    String[] parts = k.split("\\.");
-                    String farsi = InitializrReaderUtility.getResourceProperity(k);
-                    fields.put(parts[3], farsi);
-                }
-            });
-            result.put(e, fields);
-        });
-
-
-        return result;
-    }
+//    private static LinkedHashMap<String, LinkedHashMap<String, String>> findFieldsFarsiNames() {
+//
+//        List<String> entites = findEntities();
+//        LinkedHashMap<String, LinkedHashMap<String, String>> result = new LinkedHashMap<>();
+//
+//        entites.forEach(e -> {
+//            Enumeration<String> keys = InitializrReaderUtility.getResourceKeys();
+//            List<String> keyList = Collections.list(keys);
+//
+//            LinkedHashMap<String, String> fields = new LinkedHashMap<>();
+//
+//            keyList.stream().forEach(k -> {
+//                if(k.contains(e + ".field.farsi.")) {
+//                    String[] parts = k.split("\\.");
+//                    String farsi = InitializrReaderUtility.getResourceProperity(k);
+//                    fields.put(parts[3], farsi);
+//                }
+//            });
+//            result.put(e, fields);
+//        });
+//
+//
+//        return result;
+//    }
 
     private static String generateSourceTargetPackagePath(String targetPath, String basePackage, String projectName) {
         String rootPath = targetPath + "/" + projectName;
@@ -595,7 +624,7 @@ public class AEFGenerator {
 
     }
 
-    private static String generatePOMFile(String path, String projectName, String projectDescription, String artifactId, String groupId ) throws FileNotFoundException {
+    private static String generatePOMFile(String path, String projectName, String projectDescription, String artifactId, String groupId) throws FileNotFoundException {
 
         String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
@@ -632,10 +661,6 @@ public class AEFGenerator {
                 "        <dependency>\n" +
                 "            <groupId>org.springframework.boot</groupId>\n" +
                 "            <artifactId>spring-boot-starter-security</artifactId>\n" +
-                "        </dependency>\n" +
-                "        <dependency>\n" +
-                "            <groupId>org.springframework.ws</groupId>\n" +
-                "            <artifactId>spring-ws-core</artifactId>\n" +
                 "        </dependency>\n" +
                 "        <dependency>\n" +
                 "            <groupId>org.springframework.boot</groupId>\n" +
@@ -693,32 +718,10 @@ public class AEFGenerator {
                 "                <groupId>org.springframework.boot</groupId>\n" +
                 "                <artifactId>spring-boot-maven-plugin</artifactId>\n" +
                 "            </plugin>\n" +
-                "            <plugin>\n" +
-                "                <groupId>org.apache.maven.plugins</groupId>\n" +
-                "                <artifactId>maven-dependency-plugin</artifactId>\n" +
-                "                <executions>\n" +
-                "                    <execution>\n" +
-                "                        <id>unpack</id>\n" +
-                "                        <phase>package</phase>\n" +
-                "                        <goals>\n" +
-                "                            <goal>unpack</goal>\n" +
-                "                        </goals>\n" +
-                "                        <configuration>\n" +
-                "                            <artifactItems>\n" +
-                "                                <artifactItem>\n" +
-                "                                    <groupId>${project.groupId}</groupId>\n" +
-                "                                    <artifactId>${project.artifactId}</artifactId>\n" +
-                "                                    <version>${project.version}</version>\n" +
-                "                                </artifactItem>\n" +
-                "                            </artifactItems>\n" +
-                "                        </configuration>\n" +
-                "                    </execution>\n" +
-                "                </executions>\n" +
-                "            </plugin>\n" +
                 "        </plugins>\n" +
                 "    </build>\n" +
                 "\n" +
-                "</project>";
+                "</project>\n";
 
         String result = content.replaceAll("#groupId", groupId)
                 .replaceAll("#artifactId", artifactId)
@@ -736,7 +739,7 @@ public class AEFGenerator {
         return result;
     }
 
-    public static String generateEntity(String basePackage, String entityName, LinkedHashMap<String, String> fields, String targetPath) throws FileNotFoundException {
+    public static String generateEntity(String basePackage, EntityDefinition entity, String targetPath) throws FileNotFoundException {
         StringBuilder content = new StringBuilder("package #package.model;\n" +
                 "\n" +
                 "import com.aef3.data.api.DomainEntity;\n" +
@@ -749,163 +752,207 @@ public class AEFGenerator {
                 "/* Generated By AEF Generator ( Powered by Dr.Adldoost :D ) */\n" +
                 "\n" +
                 "@Entity\n" +
-                "@Table(name = \"").append(camelToSnake(entityName)).append("\")\n")
+                "@Table(name = \"").append(camelToSnake(entity.getName())).append("\")\n")
 
                 .append("public class #Entity implements DomainEntity {\n")
                 .append("\n");
 
-        for (Map.Entry<String, String> entry : fields.entrySet())
-        {
+        entity.getEntityFieldDefinitionList().forEach(field -> {
             content.append("\n");
-            if(entry.getKey().equalsIgnoreCase("id")) {
+            if (field.getName().equalsIgnoreCase("id")) {
                 content.append("    @Id\n")
                         .append("    @Column(name = \"id\")\n")
                         .append("    @GeneratedValue(strategy = GenerationType.IDENTITY)\n")
-                        .append("    private ").append(entry.getValue()).append(" ").append(entry.getKey()).append(";")
+                        .append("    private ").append(field.getFieldType().getType()).append(" ").append(field.getName()).append(";")
                         .append("\n");
-            }
-
-            else {
-                if(entry.getValue().toLowerCase().contains("DropDown".toLowerCase())) {
-                    content.append("    @Column(name = \"").append(camelToSnake(entry.getKey())).append("\"");
-                    if(!findFieldNullability(entityName, entry.getKey())) {
-                        content.append(", nullable = " + false );
-                    }
-                    String length = findFieldLength(entityName, entry.getKey());
-                    if(length != null) {
-                        content.append(", length = ").append(length);
-                    }
-                    content.append(")\n");
-                    content.append("    private Long").append(" ").append(entry.getKey()).append(";\n");
-                } else {
-                    if(getBaseTypes().contains(entry.getValue())) {
-                        content.append("    @Column(name = \"").append(camelToSnake(entry.getKey())).append("\"");
-                        if(!findFieldNullability(entityName, entry.getKey())) {
-                            content.append(", nullable = " + false );
-                        }
-                        //no need to write true, its default value
-//                    {
-//                        content.append(", nullable = " + true );
-//                    }
-                        String length = findFieldLength(entityName, entry.getKey());
-                        if(length != null) {
-                            content.append(", length = ").append(length);
-                        }
-                        content.append(")\n");
-                        if(entry.getValue().equals("Date")) {
-                            content.append("    @Temporal(TemporalType.TIMESTAMP)\n");
-                        }
-                    } else {
-                        content.append("    @JoinColumn(name = \"").append(camelToSnake(entry.getKey())).append("\", referencedColumnName = \"id\")\n")
-                                .append("    @ManyToOne\n");
-                    }
-                    content.append("    private ").append(entry.getValue()).append(" ").append(entry.getKey()).append(";\n");
+            } else if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.DROP_DOWN.getValue().toLowerCase())) {
+                content.append("    @Column(name = \"").append(camelToSnake(field.getName())).append("\"");
+                if (field.getNullable() != null && !field.getNullable()) {
+                    content.append(", nullable = " + false);
+                }
+                if (field.getLength() != null) {
+                    content.append(", length = ").append(field.getLength());
+                }
+                content.append(")\n");
+                content.append("    private Long").append(" ").append(field.getName()).append(";\n");
+            } else if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
+                content.append("    @Column(name = \"").append(camelToSnake(field.getName())).append("\"");
+                if (!field.getNullable()) {
+                    content.append(", nullable = " + false);
                 }
 
+                if (field.getLength() != null) {
+                    String length = field.getLength() + "";
+                    content.append(", length = ").append(length);
+                }
+                content.append(")\n");
+                content.append("    private Long").append(" ").append(field.getName()).append(";\n");
+            } else if (getBaseTypes().contains(field.getFieldType().getType())) {
+                content.append("    @Column(name = \"").append(camelToSnake(field.getName())).append("\"");
+                if (field.getNullable() != null && !field.getNullable()) {
+                    content.append(", nullable = " + false);
+                }
+                if (field.getLength() != null) {
+                    content.append(", length = ").append(field.getLength());
+                }
+                content.append(")\n");
+                if (field.getFieldType().getType().equalsIgnoreCase("Date")) {
+                    content.append("    @Temporal(TemporalType.TIMESTAMP)\n");
+                }
+                content.append("    private ").append(field.getFieldType().getType()).append(" ").append(field.getName()).append(";\n");
+            } else {
+                content.append("    @JoinColumn(name = \"").append(camelToSnake(field.getName())).append("\", referencedColumnName = \"id\")\n")
+                        .append("    @ManyToOne\n");
+                content.append("    private ").append(field.getFieldType().getType()).append(" ").append(field.getName()).append(";\n");
             }
-        }
+        });
 
         content.append("\n\n");
 
-        for (Map.Entry<String, String> entry : fields.entrySet())
-        {
-            String firstCharFieldName = entry.getKey().substring(0, 1);
-            String upperCaseCharFieldName = entry.getKey().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
+        entity.getEntityFieldDefinitionList().forEach(field -> {
+            String firstCharFieldName = field.getName().substring(0, 1);
+            String upperCaseCharFieldName = field.getName().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
 
-            if(entry.getValue().toLowerCase().contains("DropDown".toLowerCase())) {
+            if (field.getFieldType().getType().toLowerCase().contains("DropDown".toLowerCase())) {
                 content.append("\n")
                         .append("    public Long get").append(upperCaseCharFieldName).append("() {\n")
-                        .append("        return ").append(entry.getKey()).append(";\n")
+                        .append("        return ").append(field.getName()).append(";\n")
                         .append("    }\n")
                         .append("\n")
-                        .append("    public void set").append(upperCaseCharFieldName).append("(").append("Long ").append(entry.getKey()).append(") {\n")
-                        .append("       this.").append(entry.getKey()).append(" = ").append(entry.getKey()).append(";\n")
+                        .append("    public void set").append(upperCaseCharFieldName).append("(").append("Long ").append(field.getName()).append(") {\n")
+                        .append("       this.").append(field.getName()).append(" = ").append(field.getName()).append(";\n")
                         .append("    }\n\n");
             } else {
 
                 content.append("\n")
-                        .append("    public ").append(entry.getValue()).append(" get").append(upperCaseCharFieldName).append("() {\n")
-                        .append("        return ").append(entry.getKey()).append(";\n")
+                        .append("    public ").append(field.getFieldType().getType()).append(" get").append(upperCaseCharFieldName).append("() {\n")
+                        .append("        return ").append(field.getName()).append(";\n")
                         .append("    }\n")
                         .append("\n")
-                        .append("    public void set").append(upperCaseCharFieldName).append("(").append(entry.getValue()).append(" ").append(entry.getKey()).append(") {\n")
-                        .append("       this.").append(entry.getKey()).append(" = ").append(entry.getKey()).append(";\n")
+                        .append("    public void set").append(upperCaseCharFieldName).append("(").append(field.getFieldType().getType()).append(" ").append(field.getName()).append(") {\n")
+                        .append("       this.").append(field.getName()).append(" = ").append(field.getName()).append(";\n")
                         .append("    }\n\n");
             }
-        }
+        });
+
         content.append("\n");
 
         content.append("    @Override\n")
-                .append("    public boolean equals(Object o) {\n")
-                .append("        if (this == o) return true;\n")
-                .append("        if (!(o instanceof #Entity)) return false;\n")
-                .append("        #Entity #entity = (#Entity) o;\n")
-                .append("        return Objects.equals(id, #entity.id);\n")
-                .append("    }\n")
-                .append("\n")
-                .append("    @Override\n")
-                .append("    public int hashCode() {\n")
-                .append("\n")
-                .append("        return Objects.hash(id);\n")
-                .append("    }\n")
-                .append("\n")
-                .append("    @Override\n")
-                .append("    public String toString() {\n")
-                .append("        return \"#Entity{\" +\n")
-                .append("                \"id=\" + id +\n")
-                .append("                '}';\n")
-                .append("    }\n")
-                .append("}");
+                .
 
-        String firstChar = entityName.substring(0, 1);
-        String entityInstanceName = entityName.replaceFirst(firstChar, firstChar.toLowerCase());
+                        append("    public boolean equals(Object o) {\n")
+                .
+
+                        append("        if (this == o) return true;\n")
+                .
+
+                        append("        if (!(o instanceof #Entity)) return false;\n")
+                .
+
+                        append("        #Entity #entity = (#Entity) o;\n")
+                .
+
+                        append("        return Objects.equals(id, #entity.id);\n")
+                .
+
+                        append("    }\n")
+                .
+
+                        append("\n")
+                .
+
+                        append("    @Override\n")
+                .
+
+                        append("    public int hashCode() {\n")
+                .
+
+                        append("\n")
+                .
+
+                        append("        return Objects.hash(id);\n")
+                .
+
+                        append("    }\n")
+                .
+
+                        append("\n")
+                .
+
+                        append("    @Override\n")
+                .
+
+                        append("    public String toString() {\n")
+                .
+
+                        append("        return \"#Entity{\" +\n")
+                .
+
+                        append("                \"id=\" + id +\n")
+                .
+
+                        append("                '}';\n")
+                .
+
+                        append("    }\n")
+                .
+
+                        append("}");
+
+        String firstChar = entity.getName().substring(0, 1);
+        String entityInstanceName = entity.getName().replaceFirst(firstChar, firstChar.toLowerCase());
         String result = content.toString();
         result = result.replaceAll("#package", basePackage)
-                .replaceAll("#Entity", entityName)
-                .replaceAll("#entity", entityInstanceName);
+                .
+
+                        replaceAll("#Entity", entity.getName())
+                .
+
+                        replaceAll("#entity", entityInstanceName);
 
         System.out.printf(result);
-        try (PrintStream out = new PrintStream(new FileOutputStream(targetPath + "/" + entityName + ".java"))) {
+        try (
+                PrintStream out = new PrintStream(new FileOutputStream(targetPath + "/" + entity.getName() + ".java"))) {
             out.print(result);
         }
         return result;
     }
 
-    private static boolean findFieldNullability(String entityName, String fieldName) {
-        try {
-            String s = InitializrReaderUtility.getResourceProperity(entityName + ".field.nullable." + fieldName);
-            if(s.equalsIgnoreCase("false"))
-                return false;
-            return true;
-        } catch (Exception e) {
-            return true;
-        }
-    }
+//    private static boolean findFieldNullability(String entityName, String fieldName) {
+//        try {
+//            String s = InitializrReaderUtility.getResourceProperity(entityName + ".field.nullable." + fieldName);
+//            if(s.equalsIgnoreCase("false"))
+//                return false;
+//            return true;
+//        } catch (Exception e) {
+//            return true;
+//        }
+//    }
 
-    private static String findFieldLength(String entityName, String fieldName) {
-        try {
-            String s = InitializrReaderUtility.getResourceProperity(entityName + ".field.length." + fieldName);
-            if(Integer.parseInt(s) > 0){
-                return s;
-            }
-            String type = InitializrReaderUtility.getResourceProperity(entityName + ".field.type." + fieldName);
-            if(type.equalsIgnoreCase("Integer")
-                    || type.equalsIgnoreCase("int")
-                    || type.equalsIgnoreCase("double")
-                    || type.equalsIgnoreCase("long")
-                    || type.equalsIgnoreCase("float")
-                    || type.equalsIgnoreCase("byte")) {
-                return "10";
-            }
-            if(type.equalsIgnoreCase("String")
-                    || type.equalsIgnoreCase("char")) {
-                return "100";
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        return "10";
-    }
+//    private static String findFieldLength(String entityName, String fieldName) {
+//        try {
+//            String s = InitializrReaderUtility.getResourceProperity(entityName + ".field.length." + fieldName);
+//            if(Integer.parseInt(s) > 0){
+//                return s;
+//            }
+//            String type = InitializrReaderUtility.getResourceProperity(entityName + ".field.type." + fieldName);
+//            if(type.equalsIgnoreCase("Integer")
+//                    || type.equalsIgnoreCase("int")
+//                    || type.equalsIgnoreCase("double")
+//                    || type.equalsIgnoreCase("long")
+//                    || type.equalsIgnoreCase("float")
+//                    || type.equalsIgnoreCase("byte")) {
+//                return "10";
+//            }
+//            if(type.equalsIgnoreCase("String")
+//                    || type.equalsIgnoreCase("char")) {
+//                return "100";
+//            }
+//        } catch (Exception e) {
+//            return null;
+//        }
+//        return "10";
+//    }
 
     private static String generateRunnerClass(String path, String basePackage, String projectName) throws FileNotFoundException {
         String content = "package #package;\n" +
@@ -1020,21 +1067,21 @@ public class AEFGenerator {
 
     }
 
-    private static String generateDto(String basePackage, String entityName, LinkedHashMap<String, String> fieldMap, String targetPath, boolean validationEnabled) throws FileNotFoundException {
+    private static String generateDto(String basePackage, EntityDefinition entity, String targetPath, List<String> entityNamesList) throws FileNotFoundException {
         String result = generateDtoHeader();
-        result += generateDtoFields(fieldMap, validationEnabled, entityName);
-        result += generateDtoMappings(fieldMap, entityName);
-        result += generateDtoOverrideMethods(entityName);
+        result += generateDtoFields(entity.getEntityFieldDefinitionList(), entity.isEnableValidation(), entityNamesList);
+        result += generateDtoMappings(entity.getEntityFieldDefinitionList(), entity.getName(), entityNamesList);
+        result += generateDtoOverrideMethods();
         result += generateFooter();
 
-        String firstChar = entityName.substring(0, 1);
-        String entityInstanceName = entityName.replaceFirst(firstChar, firstChar.toLowerCase());
+        String firstChar = entity.getName().substring(0, 1);
+        String entityInstanceName = entity.getName().replaceFirst(firstChar, firstChar.toLowerCase());
         result = result.replaceAll("#package", basePackage)
-                .replaceAll("#Entity", entityName)
+                .replaceAll("#Entity", entity.getName())
                 .replaceAll("#entity", entityInstanceName);
 
         System.out.printf(result);
-        try (PrintStream out = new PrintStream(new FileOutputStream( targetPath + "/" + entityName + "Dto.java"))) {
+        try (PrintStream out = new PrintStream(new FileOutputStream(targetPath + "/" + entity.getName() + "Dto.java"))) {
             out.print(result);
         }
         return result;
@@ -1061,79 +1108,87 @@ public class AEFGenerator {
 
     }
 
-    private static String generateDtoFields(LinkedHashMap<String, String> fields, boolean validationEnabled, String entityName) {
+    private static String generateDtoFields(List<EntityFieldDefinition> entityFieldDefinitionList, boolean validationEnabled, List<String> entityNames) {
 
         StringBuilder content = new StringBuilder();
 
         content.append("\n\n");
 
-        for (Map.Entry<String, String> entry : fields.entrySet())
-        {
-            if(getBaseTypes().contains(entry.getValue())) {
-                if(validationEnabled) {
-                    if(!findFieldNullability(entityName, entry.getKey())) {
-                        if(entry.getValue().trim().equalsIgnoreCase("String")) {
-                            content.append("\n    @NotEmpty(message = \"{").append(entry.getKey()).append(".should.not.be.Empty}\")");
+        entityFieldDefinitionList.forEach(field -> {
+            if (getBaseTypes().contains(field.getFieldType().getType())) {
+                if (validationEnabled) {
+                    if (field.getNullable() != null && field.getNullable() != true) {
+                        if (field.getFieldType().getType().trim().equalsIgnoreCase("String")) {
+                            content.append("\n    @NotEmpty(message = \"{").append(field.getName()).append(".should.not.be.Empty}\")");
                         } else {
-                            content.append("\n    @NotNull(message = \"{").append(entry.getKey()).append(".should.not.be.null}\")");
+                            content.append("\n    @NotNull(message = \"{").append(field.getName()).append(".should.not.be.null}\")");
                         }
                     }
                 }
-                content.append("\n    private ").append(entry.getValue()).append(" ").append(entry.getKey()).append(";");
-            } else if(entry.getValue().toLowerCase().contains("DropDown".toLowerCase())) {
-                content.append("\n    private Long").append(" ").append(entry.getKey()).append(";");
-            } else{
-                content.append("\n    private ").append(entry.getValue() + "Dto").append(" ").append(entry.getKey()).append(";");
+                content.append("\n    private ").append(field.getFieldType().getType()).append(" ").append(field.getName()).append(";");
+            } else if (field.getFieldType().getType().toLowerCase().contains("DropDown".toLowerCase())) {
+                content.append("\n    private Long").append(" ").append(field.getName()).append(";");
+            } else {
+                content.append("\n    private ").append(field.getFieldType().getType() + "Dto").append(" ").append(field.getName()).append(";");
             }
-        }
+        });
 
         content.append("\n \n");
 
-        for (Map.Entry<String, String> entry : fields.entrySet())
-        {
+        entityFieldDefinitionList.forEach(field -> {
+            String firstCharFieldName = field.getName().substring(0, 1);
+            String upperCaseCharFieldName = field.getName().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
 
-            String firstCharFieldName = entry.getKey().substring(0, 1);
-            String upperCaseCharFieldName = entry.getKey().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
-
-            if(entry.getValue().toLowerCase().contains("DropDown".toLowerCase())) {
+            if (field.getFieldType().getType().toLowerCase().contains("DropDown".toLowerCase())) {
                 content.append("\n")
                         .append("    public Long get").append(upperCaseCharFieldName).append("() {\n")
-                        .append("        return ").append(entry.getKey()).append(";\n")
+                        .append("        return ").append(field.getName()).append(";\n")
                         .append("    }\n")
                         .append("\n")
-                        .append("    public void set").append(upperCaseCharFieldName).append("(").append("Long ").append(entry.getKey()).append(") {\n")
-                        .append("       this.").append(entry.getKey()).append(" = ").append(entry.getKey()).append(";\n")
+                        .append("    public void set").append(upperCaseCharFieldName).append("(").append("Long ").append(field.getName()).append(") {\n")
+                        .append("       this.").append(field.getName()).append(" = ").append(field.getName()).append(";\n")
                         .append("    }\n\n");
-            } else if(getBaseTypes().contains(entry.getValue())) {
-                content.append("\n    public " + entry.getValue() + " get" + upperCaseCharFieldName + "() {\n" +
-                        "        return " + entry.getKey() + ";\n" +
+            } else if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
+                content.append("\n")
+                        .append("    public Long get").append(upperCaseCharFieldName).append("() {\n")
+                        .append("        return ").append(field.getName()).append(";\n")
+                        .append("    }\n")
+                        .append("\n")
+                        .append("    public void set").append(upperCaseCharFieldName).append("(").append("Long ").append(field.getName()).append(") {\n")
+                        .append("       this.").append(field.getName()).append(" = ").append(field.getName()).append(";\n")
+                        .append("    }\n\n");
+            } else if (getBaseTypes().contains(field.getFieldType().getType())) {
+                content.append("\n    public " + field.getFieldType().getType() + " get" + upperCaseCharFieldName + "() {\n" +
+                        "        return " + field.getName() + ";\n" +
                         "    }\n" +
 
-                        "    public void set" + upperCaseCharFieldName + "(" + entry.getValue() + " " + entry.getKey() + ") {\n" +
-                        "        this." + entry.getKey() + " = " + entry.getKey() + ";\n" +
+                        "    public void set" + upperCaseCharFieldName + "(" + field.getFieldType().getType() + " " + field.getName() + ") {\n" +
+                        "        this." + field.getName() + " = " + field.getName() + ";\n" +
                         "    }" +
                         "\n");
 
+            } else if (entityNames.contains(field.getFieldType().getType())) {
+
+                content.append("\n    public " + field.getFieldType().getType() + "Dto" + " get" + upperCaseCharFieldName + "() {\n" +
+                        "        return " + field.getName() + ";\n" +
+                        "    }\n" +
+
+                        "    public void set" + upperCaseCharFieldName + "(" + field.getFieldType().getType() + "Dto" + " " + field.getName() + ") {\n" +
+                        "        this." + field.getName() + " = " + field.getName() + ";\n" +
+                        "    }" +
+                        "\n");
             } else {
-
-                content.append("\n    public " + entry.getValue() + "Dto" + " get" + upperCaseCharFieldName + "() {\n" +
-                        "        return " + entry.getKey() + ";\n" +
-                        "    }\n" +
-
-                        "    public void set" + upperCaseCharFieldName + "(" + entry.getValue() + "Dto" + " " + entry.getKey() + ") {\n" +
-                        "        this." + entry.getKey() + " = " + entry.getKey() + ";\n" +
-                        "    }" +
-                        "\n");
+                System.err.println("generateDtoFields getter setter : Unkown field type : " + field.getFieldType().getType());
             }
 
+        });
 
-        }
         String result = content.toString();
         return result;
 
     }
 
-    private static String generateDtoMappings(LinkedHashMap<String, String> fields, String entityName) {
+    private static String generateDtoMappings(List<EntityFieldDefinition> entityFieldDefinitionList, String entityName, List<String> entityNames) {
 
         String firstChar = entityName.substring(0, 1);
         String entityInstanceName = entityName.replaceFirst(firstChar, firstChar.toLowerCase());
@@ -1150,32 +1205,33 @@ public class AEFGenerator {
                 "        #EntityDto dto = new #EntityDto();");
 
 
-        for (Map.Entry<String, String> entry : fields.entrySet())
-        {
-            String firstCharFieldName = entry.getKey().substring(0, 1);
-            String upperCaseCharFieldName = entry.getKey().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
-            if(entry.getValue().toLowerCase().contains("DropDown".toLowerCase())) {
+        entityFieldDefinitionList.forEach(field -> {
+
+            String fieldType = field.getFieldType().getType();
+
+            String firstCharFieldName = field.getName().substring(0, 1);
+            String upperCaseCharFieldName = field.getName().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
+            if (fieldType.toLowerCase().contains(ComponentTypes.DROP_DOWN.getValue().toLowerCase())) {
                 content.append("\n        dto.set").append(upperCaseCharFieldName).append("(").append(entityInstanceName).append(".get").append(upperCaseCharFieldName).append("()").append(");");
-            }
-            else if(getBaseTypes().contains(entry.getValue())) {
+            } else if (fieldType.toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
                 content.append("\n        dto.set").append(upperCaseCharFieldName).append("(").append(entityInstanceName).append(".get").append(upperCaseCharFieldName).append("()").append(");");
-            }
-            else {
+            } else if (getBaseTypes().contains(fieldType)) {
+                content.append("\n        dto.set").append(upperCaseCharFieldName).append("(").append(entityInstanceName).append(".get").append(upperCaseCharFieldName).append("()").append(");");
+            } else if (entityNames.contains(fieldType)) {
                 content.append("\n        dto.set").append(upperCaseCharFieldName).append("(")
-                        .append(entry.getValue()).append("Dto.toDto(")
+                        .append(fieldType).append("Dto.toDto(")
                         .append(entityInstanceName).append(".get").append(upperCaseCharFieldName).append("()")
                         .append(")")
                         .append(");");
+            } else {
+                System.err.println("generateDtoMappings getter setter : Unkown field type : " + fieldType);
             }
-        }
+        });
+
 
         content.append("\n        return dto;");
-
         content.append("\n  }");
-
-
         content.append("\n\n");
-
 
         //toEntity method
         content.append("\n    public static #Entity toEntity(#EntityDto dto) {\n\n" +
@@ -1183,37 +1239,36 @@ public class AEFGenerator {
                 "            return null; \n" +
                 "        #Entity #entity = new #Entity();");
 
+        entityFieldDefinitionList.forEach(field -> {
+            String fieldType = field.getFieldType().getType();
 
-        for (Map.Entry<String, String> entry : fields.entrySet())
-        {
-            String firstCharFieldName = entry.getKey().substring(0, 1);
-            String upperCaseCharFieldName = entry.getKey().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
-            if(getBaseTypes().contains(entry.getValue())) {
+            String firstCharFieldName = field.getName().substring(0, 1);
+            String upperCaseCharFieldName = field.getName().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
+            if (getBaseTypes().contains(fieldType)) {
                 content.append("\n        #entity.set").append(upperCaseCharFieldName).append("(").append("dto").append(".get").append(upperCaseCharFieldName).append("()").append(");");
-            }
-            else if(entry.getValue().toLowerCase().contains("DropDown".toLowerCase())) {
+            } else if (fieldType.toLowerCase().contains(ComponentTypes.DROP_DOWN.getValue().toLowerCase())) {
                 content.append("\n        #entity.set").append(upperCaseCharFieldName).append("(").append("dto").append(".get").append(upperCaseCharFieldName).append("()").append(");");
-            }
-            else {
+            } else if (fieldType.toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
+                content.append("\n        #entity.set").append(upperCaseCharFieldName).append("(").append("dto").append(".get").append(upperCaseCharFieldName).append("()").append(");");
+            } else if (entityNames.contains(fieldType)) {
                 content.append("\n        #entity.set").append(upperCaseCharFieldName).append("(")
-                        .append(entry.getValue()).append("Dto.toEntity(")
+                        .append(fieldType).append("Dto.toEntity(")
                         .append("dto").append(".get").append(upperCaseCharFieldName).append("()")
                         .append(")")
                         .append(");");
+            } else {
+                System.err.println("generateDtoMappings converters: Unkown field type : " + fieldType);
             }
-        }
+        });
 
         content.append("\n        return #entity;");
-
         content.append("\n  }");
 
-
-        String result = content.toString();
-        return result;
+        return content.toString();
 
     }
 
-    private static String generateDtoOverrideMethods(String entityName) {
+    private static String generateDtoOverrideMethods() {
         String content = "\n    @Override\n" +
                 "    public #Entity toEntity() {\n" +
                 "        return #EntityDto.toEntity(this);\n" +
@@ -1234,29 +1289,29 @@ public class AEFGenerator {
 
     }
 
-    private static void generateRestService(String basePackage, String entityName, LinkedHashMap<String, String> fieldMap, String targetPath) throws FileNotFoundException {
+    private static void generateRestService(String basePackage, EntityDefinition entity, String targetPath, boolean generatePermissions) throws FileNotFoundException {
 
-        String firstChar = entityName.substring(0, 1);
-        String entityInstanceName = entityName.replaceFirst(firstChar, firstChar.toLowerCase());
+        String firstChar = entity.getName().substring(0, 1);
+        String entityInstanceName = entity.getName().replaceFirst(firstChar, firstChar.toLowerCase());
 
-        String result = generateRestHeader();
-        result += generateRestGetMethods(fieldMap, entityName);
-        result += generateRestPostAndRemove(entityName);
+        String result = generateRestHeader(generatePermissions);
+        result += generateRestGetMethods(entity, generatePermissions);
+        result += generateRestPostAndRemove(entity.getName(), generatePermissions);
         result += generateFooter();
 
 
         result = result.replaceAll("#package", basePackage)
-                .replaceAll("#Entity", entityName)
+                .replaceAll("#Entity", entity.getName())
                 .replaceAll("#entity", entityInstanceName);
 
         System.out.printf(result);
-        try (PrintStream out = new PrintStream(new FileOutputStream(targetPath + "/" + entityName + "RestService.java"))) {
+        try (PrintStream out = new PrintStream(new FileOutputStream(targetPath + "/" + entity.getName() + "RestService.java"))) {
             out.print(result);
         }
 
     }
 
-    private static String generateRestHeader() {
+    private static String generateRestHeader(Boolean generatePermissions) {
         String content = "package #package.rest;\n" +
                 "\n" +
                 "import com.aef3.data.SortUtil;\n" +
@@ -1270,13 +1325,14 @@ public class AEFGenerator {
                 "import java.util.Date;\n" +
                 "\n";
 
-                if(checkGeneration("generate.security.roles")) {
-                    content += "import org.springframework.security.access.annotation.Secured;\n";
-                    content += "import #package.security.AccessRoles;\n";
+        if (generatePermissions) {
+            content += "import org.springframework.security.access.annotation.Secured;\n";
+            content += "import org.springframework.security.access.prepost.PreAuthorize;\n";
+            content += "import #package.security.AccessRoles;\n";
 
-                }
+        }
 
-                content += "import java.text.ParseException;\n" +
+        content += "import java.text.ParseException;\n" +
                 "import java.util.Collections;\n" +
                 "import java.util.List;\n" +
                 "\n" +
@@ -1296,45 +1352,50 @@ public class AEFGenerator {
         return content;
     }
 
-    private static String generateRestGetMethods(LinkedHashMap<String, String> fields, String entity) {
+    private static String generateRestGetMethods(EntityDefinition entity, Boolean generatePermissions) {
 
         StringBuilder content = new StringBuilder(
                 "\n\n");
-                if(checkGeneration("generate.security.roles")) {
-                    content.append("    @Secured(AccessRoles.ROLE_FIND_").append(camelToSnake(entity).toUpperCase()).append(")\n");
-                    }
-                content.append("    @GetMapping(\"/{id}\")\n" +
+        if (generatePermissions) {
+            content.append("    @PreAuthorize(\"hasAuthority('AUTHORITY_FIND_").append(camelToSnake(entity.getName()).toUpperCase()).append(")\n");
+        }
+        content.append("    @GetMapping(\"/{id}\")\n" +
                 "    public #EntityDto findById(@PathVariable(name = \"id\")Long id) {\n" +
                 "        return #entityService.findByPrimaryKey(id);\n" +
                 "    }\n" +
                 "\n");
-                if(checkGeneration("generate.security.roles")) {
-                    content.append("    @Secured(AccessRoles.ROLE_SEARCH_").append(camelToSnake(entity).toUpperCase()).append(")\n");
-                }
-                content.append("    @GetMapping(\"/search\")\n" +
+        if (generatePermissions) {
+            content.append("     @PreAuthorize(\"hasAuthority('AUTHORITY_SEARCH_").append(camelToSnake(entity.getName()).toUpperCase()).append(")\n");
+        }
+        content.append("    @GetMapping(\"/search\")\n" +
                 "    public PagedResult search(");
 
-                for (Map.Entry<String, String> entry : fields.entrySet())
-                {
-                    if(getBaseTypes().contains(entry.getValue())) {
-                        content.append("\n                                      @RequestParam(value = \"").append(entry.getKey()).append("\", required = false) ");
-                        content.append(entry.getValue()).append(" ").append(entry.getKey()).append(",");
-                    }
-                }
+        for (EntityFieldDefinition field : entity.getEntityFieldDefinitionList()) {
+            if (getBaseTypes().contains(field.getFieldType().getType())) {
+                content.append("\n                                      @RequestParam(value = \"").append(field.getName()).append("\", required = false) ");
+                content.append(field.getFieldType().getType()).append(" ").append(field.getName()).append(",");
+            } else if (field.getFieldType().getType().contains(ComponentTypes.DROP_DOWN.getValue())) {
+                content.append("\n                                      @RequestParam(value = \"").append(field.getName()).append("\", required = false) ");
+                content.append("Long").append(" ").append(field.getName()).append(",");
+            } else if (field.getFieldType().getType().contains(ComponentTypes.RADIO_BUTTON.getValue())) {
+                content.append("\n                                      @RequestParam(value = \"").append(field.getName()).append("\", required = false) ");
+                content.append("Long").append(" ").append(field.getName()).append(",");
+            }
+        }
 
-                content.append("\n                                      @RequestParam(value = \"").append("firstIndex").append("\", required = false) ");
-                content.append("Integer").append(" ").append("firstIndex").append(",");
-                content.append("\n                                      @RequestParam(value = \"").append("pageSize").append("\", required = false) ");
-                content.append("Integer").append(" ").append("pageSize").append(",");
-                content.append("\n                                      @RequestParam(value = \"").append("sortField").append("\", required = false) ");
-                content.append("String").append(" ").append("sortField").append(",");
-                content.append("\n                                      @RequestParam(value = \"").append("sortOrder").append("\", required = false) ");
-                content.append("String").append(" ").append("sortOrder").append(",");
+        content.append("\n                                      @RequestParam(value = \"").append("firstIndex").append("\", required = false) ");
+        content.append("Integer").append(" ").append("firstIndex").append(",");
+        content.append("\n                                      @RequestParam(value = \"").append("pageSize").append("\", required = false) ");
+        content.append("Integer").append(" ").append("pageSize").append(",");
+        content.append("\n                                      @RequestParam(value = \"").append("sortField").append("\", required = false) ");
+        content.append("String").append(" ").append("sortField").append(",");
+        content.append("\n                                      @RequestParam(value = \"").append("sortOrder").append("\", required = false) ");
+        content.append("String").append(" ").append("sortOrder").append(",");
 
 
-                content = removeLastChar(content);
-                content.append(") {\n\n");
-                content.append("            SortObject sortObject = SortUtil.generateSortObject(sortField, sortOrder);\n" +
+        content = removeLastChar(content);
+        content.append(") {\n\n");
+        content.append("            SortObject sortObject = SortUtil.generateSortObject(sortField, sortOrder);\n" +
                 "            List<SortObject> sortObjectList = null;\n" +
                 "            if(sortObject != null)\n" +
                 "               sortObjectList = Collections.singletonList(sortObject);\n" +
@@ -1345,17 +1406,24 @@ public class AEFGenerator {
                 "               pageSize = Integer.MAX_VALUE;\n");
 
 
-                content.append("            #EntityDto #entity = new #EntityDto();\n");
-                for (Map.Entry<String, String> entry : fields.entrySet())
-                {
-                    if(getBaseTypes().contains(entry.getValue())) {
-                        String firstCharFieldName = entry.getKey().substring(0, 1);
-                        String upperCaseCharFieldName = entry.getKey().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
-                        content.append("            #entity.set" + upperCaseCharFieldName + "(" + entry.getKey() + "); \n");
-                    }
-                }
+        content.append("            #EntityDto #entity = new #EntityDto();\n");
+        for (EntityFieldDefinition field : entity.getEntityFieldDefinitionList()) {
+            if (getBaseTypes().contains(field.getFieldType().getType())) {
+                String firstCharFieldName = field.getName().substring(0, 1);
+                String upperCaseCharFieldName = field.getName().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
+                content.append("            #entity.set" + upperCaseCharFieldName + "(" + field.getName() + "); \n");
+            } else if (field.getFieldType().getType().contains(ComponentTypes.DROP_DOWN.getValue())) {
+                String firstCharFieldName = field.getName().substring(0, 1);
+                String upperCaseCharFieldName = field.getName().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
+                content.append("            #entity.set" + upperCaseCharFieldName + "(" + field.getName() + "); \n");
+            } else if (field.getFieldType().getType().contains(ComponentTypes.RADIO_BUTTON.getValue())) {
+                String firstCharFieldName = field.getName().substring(0, 1);
+                String upperCaseCharFieldName = field.getName().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
+                content.append("            #entity.set" + upperCaseCharFieldName + "(" + field.getName() + "); \n");
+            }
+        }
 
-                content.append("\n            return #entityService.findPagedByExample(#entity,\n" +
+        content.append("\n            return #entityService.findPagedByExample(#entity,\n" +
                 "                   sortObjectList,\n" +
                 "                   firstIndex,\n" +
                 "                   pageSize,\n" +
@@ -1363,24 +1431,24 @@ public class AEFGenerator {
                 "                   null,\n" +
                 "                   null\n" +
                 "                   );\n");
-                content.append("    }\n\n");
-                return content.toString();
+        content.append("    }\n\n");
+        return content.toString();
     }
 
-    private static String generateRestPostAndRemove(String entity) {
+    private static String generateRestPostAndRemove(String entity, Boolean generatePermissions) {
         StringBuilder content = new StringBuilder("\n");
-                if(checkGeneration("generate.security.roles")) {
-                    content.append("    @Secured(AccessRoles.ROLE_SAVE_").append(camelToSnake(entity).toUpperCase()).append(")\n");
-                }
-                content.append("    @PostMapping(path = \"/save\")\n" +
+        if (generatePermissions) {
+            content.append("    @PreAuthorize(\"hasAuthority('AUTHORITY_SAVE_").append(camelToSnake(entity).toUpperCase()).append(")\n");
+        }
+        content.append("    @PostMapping(path = \"/save\")\n" +
                 "    public #EntityDto save(@RequestBody #EntityDto #entity) {\n" +
                 "        return #entityService.save(#entity);\n" +
                 "    }\n" +
                 "\n");
-                if(checkGeneration("generate.security.roles")) {
-                    content.append("\n    @Secured(AccessRoles.ROLE_REMOVE_").append(camelToSnake(entity).toUpperCase()).append(")\n");
-                }
-                content.append("    @DeleteMapping(path = \"/delete/{id}\")\n" +
+        if (generatePermissions) {
+            content.append("\n    @PreAuthorize(\"hasAuthority('AUTHORITY_REMOVE_").append(camelToSnake(entity).toUpperCase()).append(")\n");
+        }
+        content.append("    @DeleteMapping(path = \"/delete/{id}\")\n" +
                 "    public void remove(@PathVariable(name = \"id\")Long id) {\n" +
                 "        #entityService.remove(id);\n" +
                 "    }");
@@ -1597,6 +1665,8 @@ public class AEFGenerator {
     }
 
     private static String generateFarsiCodeReaderUtility(String path, String basePackage) throws FileNotFoundException {
+
+        //fixme : utf8 reading...
         String content = "package #package.common;\n" +
                 "\n" +
                 "import java.util.Enumeration;\n" +
@@ -2315,75 +2385,75 @@ public class AEFGenerator {
     private static String generateSecurityWrapperClass(String path, String basePackage) throws FileNotFoundException {
         String content =
                 "package #package.jwt;\n" +
-                "\n" +
-                "import java.util.List;\n" +
-                "\n" +
-                "/**\n" +
-                " *\n" +
-                " * @author Generated By AEF3 Framework, powered by Dr.Adldoost :D\n" +
-                " */\n" +
-                "public class SecurityWrapper {\n" +
-                "    \n" +
-                "    private String username;\n" +
-                "    private List<String> permissions;\n" +
-                "    private List<String> roles;\n" +
-                "    private String freshToken;\n" +
-                "    private boolean isSecure;\n" +
-                "\n" +
-                "    public SecurityWrapper() {\n" +
-                "\n" +
-                "    }\n" +
-                "\n" +
-                "    public SecurityWrapper(String username, List<String> permissions, List<String> roles, String freshToken, boolean isSecure){\n" +
-                "\n" +
-                "        this.username = username;\n" +
-                "        this.permissions = permissions;\n" +
-                "        this.roles = roles;\n" +
-                "        this.freshToken = freshToken;\n" +
-                "        this.isSecure = isSecure;\n" +
-                "    }\n" +
-                "\n" +
-                "    public String getUsername() {\n" +
-                "        return username;\n" +
-                "    }\n" +
-                "\n" +
-                "    public void setUsername(String username) {\n" +
-                "        this.username = username;\n" +
-                "    }   \n" +
-                "\n" +
-                "    public List<String> getPermissions() {\n" +
-                "        return permissions;\n" +
-                "    }\n" +
-                "\n" +
-                "    public void setPermissions(List<String> permissions) {\n" +
-                "        this.permissions = permissions;\n" +
-                "    }\n" +
-                "\n" +
-                "    public List<String> getRoles() {\n" +
-                "        return roles;\n" +
-                "    }\n" +
-                "\n" +
-                "    public void setRoles(List<String> roles) {\n" +
-                "        this.roles = roles;\n" +
-                "    }\n" +
-                "\n" +
-                "    public String getFreshToken() {\n" +
-                "        return freshToken;\n" +
-                "    }\n" +
-                "\n" +
-                "    public void setFreshToken(String freshToken) {\n" +
-                "        this.freshToken = freshToken;\n" +
-                "    }\n" +
-                "\n" +
-                "    public boolean isSecure() {\n" +
-                "        return isSecure;\n" +
-                "    }\n" +
-                "\n" +
-                "    public void setSecure(boolean secure) {\n" +
-                "        isSecure = secure;\n" +
-                "    }\n" +
-                "\n" +
-                "}\n";
+                        "\n" +
+                        "import java.util.List;\n" +
+                        "\n" +
+                        "/**\n" +
+                        " *\n" +
+                        " * @author Generated By AEF3 Framework, powered by Dr.Adldoost :D\n" +
+                        " */\n" +
+                        "public class SecurityWrapper {\n" +
+                        "    \n" +
+                        "    private String username;\n" +
+                        "    private List<String> permissions;\n" +
+                        "    private List<String> roles;\n" +
+                        "    private String freshToken;\n" +
+                        "    private boolean isSecure;\n" +
+                        "\n" +
+                        "    public SecurityWrapper() {\n" +
+                        "\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public SecurityWrapper(String username, List<String> permissions, List<String> roles, String freshToken, boolean isSecure){\n" +
+                        "\n" +
+                        "        this.username = username;\n" +
+                        "        this.permissions = permissions;\n" +
+                        "        this.roles = roles;\n" +
+                        "        this.freshToken = freshToken;\n" +
+                        "        this.isSecure = isSecure;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public String getUsername() {\n" +
+                        "        return username;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void setUsername(String username) {\n" +
+                        "        this.username = username;\n" +
+                        "    }   \n" +
+                        "\n" +
+                        "    public List<String> getPermissions() {\n" +
+                        "        return permissions;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void setPermissions(List<String> permissions) {\n" +
+                        "        this.permissions = permissions;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public List<String> getRoles() {\n" +
+                        "        return roles;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void setRoles(List<String> roles) {\n" +
+                        "        this.roles = roles;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public String getFreshToken() {\n" +
+                        "        return freshToken;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void setFreshToken(String freshToken) {\n" +
+                        "        this.freshToken = freshToken;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public boolean isSecure() {\n" +
+                        "        return isSecure;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void setSecure(boolean secure) {\n" +
+                        "        isSecure = secure;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "}\n";
 
         String result = content.replaceAll("#package", basePackage);
 
@@ -2839,7 +2909,8 @@ public class AEFGenerator {
                                                                String dataSourceUserName,
                                                                String dataSourcePassword,
                                                                String contextPath,
-                                                               String portNumber) throws FileNotFoundException {
+                                                               String portNumber,
+                                                               String basePackage) throws FileNotFoundException {
         String content = "spring.datasource.url=" + datasourceUrl + "\n" +
                 "spring.datasource.username=" + dataSourceUserName + "\n" +
                 "spring.datasource.password=" + dataSourcePassword + "\n" +
@@ -2852,7 +2923,7 @@ public class AEFGenerator {
                 "server.port=" + portNumber + "\n" +
                 "\n" +
                 "logging.file=target/logs/application.log\n" +
-                "logging.level.de.larmic=DEBUG";
+                "logging.level." + basePackage + "=INFO\n";
 
         File file = new File(path);
         file.mkdirs();
@@ -2893,8 +2964,7 @@ public class AEFGenerator {
         return content;
     }
 
-    public static String camelToSnake(String phrase)
-    {
+    public static String camelToSnake(String phrase) {
         String regex = "([a-z])([A-Z]+)";
         String replacement = "$1_$2";
         String snake = phrase
@@ -2936,16 +3006,16 @@ public class AEFGenerator {
         return typeNames;
     }
 
-    public static List<String> getComponentTypes() {
-        List<String> typeNames = new ArrayList<>();
-        typeNames.add("DropDown");
-        typeNames.add("RadioButtonList");
-        typeNames.add("CheckBoxList");
-        typeNames.add("RadioButton");
-        typeNames.add("CheckBox");
-
-        return typeNames;
-    }
+//    public static List<String> getComponentTypes() {
+//        List<String> typeNames = new ArrayList<>();
+//        typeNames.add("DropDown");
+//        typeNames.add("RadioButtonList");
+//        typeNames.add("CheckBoxList");
+//        typeNames.add("RadioButton");
+//        typeNames.add("CheckBox");
+//
+//        return typeNames;
+//    }
 
     private static StringBuilder removeLastChar(StringBuilder str) {
         return new StringBuilder(str.substring(0, str.length() - 1));
