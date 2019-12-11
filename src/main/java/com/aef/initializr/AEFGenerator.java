@@ -226,6 +226,9 @@ public class AEFGenerator {
                     generateRestService(basePackage, entity, restPath.getPath(), systemDefinition.getBackendConfig().getBackendGenerationConfig().isGeneratePermissions());
                 }
 
+                FrontGenerator frontGenerator = new FrontGenerator();
+                frontGenerator.generateStructureOfProject(systemDefinition.getFrontendConfig().getProjectName(), systemDefinition.getFrontendConfig().getTargetPath());
+
                 FrontGenerator.generateEntityComponent(entityNameList, systemDefinition.getFrontendConfig().getTargetPath(), entity);
                 FrontGenerator.generateEntityService(systemDefinition.getFrontendConfig().getTargetPath(), entity.getName());
                 FrontGenerator.generateEntityHtmlView(systemDefinition.getFrontendConfig().getTargetPath(), systemDefinition, entity);
@@ -1357,7 +1360,7 @@ public class AEFGenerator {
         StringBuilder content = new StringBuilder(
                 "\n\n");
         if (generatePermissions) {
-            content.append("    @PreAuthorize(\"hasAuthority('AUTHORITY_FIND_").append(camelToSnake(entity.getName()).toUpperCase()).append(")\n");
+            content.append("    @PreAuthorize(\"hasAuthority('AUTHORITY_FIND_").append(camelToSnake(entity.getName()).toUpperCase()).append("')\"").append(")\n");
         }
         content.append("    @GetMapping(\"/{id}\")\n" +
                 "    public #EntityDto findById(@PathVariable(name = \"id\")Long id) {\n" +
@@ -1365,7 +1368,7 @@ public class AEFGenerator {
                 "    }\n" +
                 "\n");
         if (generatePermissions) {
-            content.append("     @PreAuthorize(\"hasAuthority('AUTHORITY_SEARCH_").append(camelToSnake(entity.getName()).toUpperCase()).append(")\n");
+            content.append("     @PreAuthorize(\"hasAuthority('AUTHORITY_SEARCH_").append(camelToSnake(entity.getName()).toUpperCase()).append("')\"").append(")\n");
         }
         content.append("    @GetMapping(\"/search\")\n" +
                 "    public PagedResult search(");
@@ -1438,7 +1441,7 @@ public class AEFGenerator {
     private static String generateRestPostAndRemove(String entity, Boolean generatePermissions) {
         StringBuilder content = new StringBuilder("\n");
         if (generatePermissions) {
-            content.append("    @PreAuthorize(\"hasAuthority('AUTHORITY_SAVE_").append(camelToSnake(entity).toUpperCase()).append(")\n");
+            content.append("    @PreAuthorize(\"hasAuthority('AUTHORITY_SAVE_").append(camelToSnake(entity).toUpperCase()).append("')\"").append(")\n");
         }
         content.append("    @PostMapping(path = \"/save\")\n" +
                 "    public #EntityDto save(@RequestBody #EntityDto #entity) {\n" +
@@ -1446,7 +1449,7 @@ public class AEFGenerator {
                 "    }\n" +
                 "\n");
         if (generatePermissions) {
-            content.append("\n    @PreAuthorize(\"hasAuthority('AUTHORITY_REMOVE_").append(camelToSnake(entity).toUpperCase()).append(")\n");
+            content.append("\n    @PreAuthorize(\"hasAuthority('AUTHORITY_REMOVE_").append(camelToSnake(entity).toUpperCase()).append("')\"").append(")\n");
         }
         content.append("    @DeleteMapping(path = \"/delete/{id}\")\n" +
                 "    public void remove(@PathVariable(name = \"id\")Long id) {\n" +
@@ -2919,7 +2922,7 @@ public class AEFGenerator {
                 "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL5InnoDBDialect\n" +
                 "spring.jpa.properties.hibernate.dialect.storage_engine=innodb\n" +
                 "\n" +
-                "server.servlet.context-path=" + contextPath + "\n" +
+                "server.servlet.context-path=/" + contextPath + "\n" +
                 "server.port=" + portNumber + "\n" +
                 "\n" +
                 "logging.file=target/logs/application.log\n" +

@@ -1,5 +1,6 @@
 package com.aef.initializr.types;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -79,6 +80,7 @@ public class FieldType implements Serializable {
         this.colspan = colspan;
     }
 
+    @JsonIgnore
     public List<String> getOptionLabels() {
         if(options == null || options.isEmpty())
             return null;
@@ -91,6 +93,7 @@ public class FieldType implements Serializable {
         }
     }
 
+    @JsonIgnore
     public List<String> getOptionValues() {
         if(options == null || options.isEmpty())
             return null;

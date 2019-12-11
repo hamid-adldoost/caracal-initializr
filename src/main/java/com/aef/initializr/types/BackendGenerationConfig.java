@@ -3,28 +3,28 @@ package com.aef.initializr.types;
 
 public class BackendGenerationConfig {
 
-    private boolean generateMaven;
-    private boolean generateRunnerClass;
-    private boolean generatePropertiesFile;
-    private boolean generateConfigPropertiesFile;
-    private boolean generateErrorCodeFile;
-    private boolean generateSecurityConfigClass;
-    private boolean generateSecurityAuthorities;
+    private boolean generateMaven = true;
+    private boolean generateRunnerClass = true;
+    private boolean generatePropertiesFile = true;
+    private boolean generateConfigPropertiesFile = true;
+    private boolean generateErrorCodeFile = true;
+    private boolean generateSecurityConfigClass = true;
+    private boolean generateSecurityAuthorities = true;
 
-    private boolean generateEntities;
-    private boolean generateDto;
-    private boolean generateDao;
-    private boolean generateService;
-    private boolean generateRest;
-    private boolean generateGeneralService;
+    private boolean generateEntities = true;
+    private boolean generateDto = true;
+    private boolean generateDao = true;
+    private boolean generateService = true;
+    private boolean generateRest = true;
+    private boolean generateGeneralService = true;
 
-    private boolean generateSecurityService;
-    private boolean generateLoginRest;
+    private boolean generateSecurityService = true;
+    private boolean generateLoginRest = true;
 
-    private boolean generatePermissions;
+    private boolean generatePermissions = true;
 
-    private boolean generateCommonClasses;
-    private boolean generateJwtClasses;
+    private boolean generateCommonClasses = true;
+    private boolean generateJwtClasses = true;
 
     public boolean isGenerateMaven() {
         return generateMaven;

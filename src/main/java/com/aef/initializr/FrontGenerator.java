@@ -125,7 +125,7 @@ public class FrontGenerator {
                 "@Component({\n" +
                 "  selector: 'app-#entity',\n" +
                 "  templateUrl: './#entity.component.html',\n" +
-                "  styleUrls: ['./#entity.component.css']\n" +
+                "  styleUrls: ['./#entity.component.css'],\n" +
                 "  animations: [\n" +
                 "    trigger('errorState', [\n" +
                 "      state('hidden', style({\n" +
@@ -175,7 +175,7 @@ public class FrontGenerator {
 
         content.append("  search").append(entity.getName()).append(": {");
         entity.getEntityFieldDefinitionList().forEach(field -> {
-            content.append(entity.getName()).append(": any, ");
+            content.append(field.getName()).append(": any, ");
         });
         content.setLength(content.length() - 2);
         content.append("} = {");
@@ -388,7 +388,7 @@ public class FrontGenerator {
 
 
         StringBuilder content = new StringBuilder("<p-toast [style]=\"{marginTop: '30px'}\" position=\"top-center\" ></p-toast>\n" +
-                "<div class=\"main-content\">\n" +
+                "<div id=\"form\" class=\"main-content\">\n" +
                 "\n" +
                 "  <div class=\"ui-rtl\" dir=\"rtl\">\n" +
                 "   <div class=\"alert alert-danger\" style=\"margin-bottom: 0; font-family:iran-sans-web;\"\n" +
@@ -399,7 +399,8 @@ public class FrontGenerator {
                 "      <p-header>\n" +
                 "        #FarsiName\n" +
                 "      </p-header>\n" +
-                "\n");
+                "\n" +
+                "       <form #form=\"ngForm\">\n\n");
         entity.getEntityFieldDefinitionList().forEach(field -> {
 
             //validate colspan values of fields
@@ -542,6 +543,7 @@ public class FrontGenerator {
                 "      </div>\n" +
                 "\n" +
                 "\n" +
+                "       </form>\n" +
                 "  </p-panel>\n" +
                 "\n" +
                 "  <p-confirmDialog header=\"توجه\" icon=\"pi pi-exclamation-triangle\" acceptLabel=\"بله\"\n" +
@@ -551,7 +553,7 @@ public class FrontGenerator {
         String result = content.toString();
         result = result.replace("#LowerCase", entity.getName().toLowerCase());
         result = result.replace("#entity", entity.getName());
-        result = result.replace("#FarsiName", entity.getName());
+        result = result.replace("#FarsiName", entity.getFarsiName());
 
         System.out.printf(result);
         path += "src\\app\\" + GeneratorTools.camelToDashedSnake(entity.getName()).toLowerCase() + "\\";
