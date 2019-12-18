@@ -18,7 +18,7 @@ public class FieldType implements Serializable {
     private String type; //DropDown
     private String referenceUrl;//http://localhost:9090/project-name/reasons
     private String defaultValue;//2
-    private String options;//[{"label": "عدم توانایی فنی", "value": "1"},{"label": "مشکلات اخلاقی", "value": "2"}]
+    private List<Choice> options;//[{"label": "عدم توانایی فنی", "value": "1"},{"label": "مشکلات اخلاقی", "value": "2"}]
     private String optionLabel;//label
     private String optionValue;//value
     private Integer colspan;
@@ -48,11 +48,11 @@ public class FieldType implements Serializable {
         this.defaultValue = defaultValue;
     }
 
-    public String getOptions() {
+    public List<Choice> getOptions() {
         return options;
     }
 
-    public void setOptions(String options) {
+    public void setOptions(List<Choice> options) {
         this.options = options;
     }
 
@@ -80,47 +80,41 @@ public class FieldType implements Serializable {
         this.colspan = colspan;
     }
 
-    @JsonIgnore
-    public List<String> getOptionLabels() {
-        if(options == null || options.isEmpty())
-            return null;
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            DropDownType[] list = objectMapper.readValue(options, DropDownType[].class);
-            return Arrays.stream(list).map(DropDownType::getLabel).collect(Collectors.toList());
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Json is not parsable for option : " + options);
-        }
-    }
+//    @JsonIgnore
+//    public List<String> getOptionLabels() {
+//        if(options == null || options.isEmpty())
+//            return null;
+//        try {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            Choice[] list = objectMapper.readValue(options, Choice[].class);
+//            return Arrays.stream(list).map(Choice::getLabel).collect(Collectors.toList());
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException("Json is not parsable for option : " + options);
+//        }
+//    }
 
-    @JsonIgnore
-    public List<String> getOptionValues() {
-        if(options == null || options.isEmpty())
-            return null;
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            DropDownType[] list = objectMapper.readValue(options, DropDownType[].class);
-            return Arrays.stream(list).map(DropDownType::getValue).collect(Collectors.toList());
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Json is not parsable for option : " + options);
-        }
-    }
+//    @JsonIgnore
+//    public List<String> getOptionValues() {
+//        if(options == null || options.isEmpty())
+//            return null;
+//        try {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            DropDownType[] list = objectMapper.readValue(options, Choice[].class);
+//            return Arrays.stream(list).map(DropDownType::getValue).collect(Collectors.toList());
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException("Json is not parsable for option : " + options);
+//        }
+//    }
 
     public Map<String, String> getOptionMap() {
-        if(options == null || options.isEmpty())
+        if (options == null || options.isEmpty())
             return null;
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            Map<String, String> optionMap = new HashMap<>();
-            options = options.replace("'", "\"");
-            DropDownType[] list = objectMapper.readValue(options, DropDownType[].class);
-            Arrays.stream(list).forEach(i -> {
-                optionMap.put(i.getLabel(), i.getValue());
-            });
-            return optionMap;
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Json is not parsable for option : " + options);
-        }
+        Map<String, String> optionMap = new HashMap<>();
+        options.forEach(i -> {
+            optionMap.put(i.getLabel(), i.getValue());
+        });
+        return optionMap;
+
     }
 
     public Boolean getPassword() {

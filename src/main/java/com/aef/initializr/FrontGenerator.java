@@ -6,6 +6,7 @@ import com.aef.initializr.types.EntityDefinition;
 import com.aef.initializr.types.SystemDefinition;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import org.springframework.boot.json.JsonParser;
 import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.util.ResourceUtils;
@@ -45,7 +46,7 @@ public class FrontGenerator {
             File filePath = new File(rootPath);
             filePath.mkdirs();
             extractZip(file, filePath);
-            replaceText(filePath.getPath(), projectName);
+//            replaceText(filePath.getPath(), projectName);
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
@@ -159,14 +160,15 @@ public class FrontGenerator {
         entity.getEntityFieldDefinitionList().forEach(field -> {
             if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.DROP_DOWN.getValue().toLowerCase())
                     ||  field.getFieldType().getType().toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
-                ObjectMapper objectMapper = new ObjectMapper();
-                String json = field.getFieldType().getOptions();
-                try {
-                    DropDownType[] list = objectMapper.readValue(json, DropDownType[].class);
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
-                content.append("  " + field.getName() + "options = " + json.replace("\"", "'") + ";\n");
+//                ObjectMapper objectMapper = new ObjectMapper();
+//                String json = field.getFieldType().getOptions();
+//                try {
+//                    DropDownType[] list = objectMapper.readValue(json, DropDownType[].class);
+//                } catch (JsonProcessingException e) {
+//                    e.printStackTrace();
+//                }
+                Gson gson = new Gson();
+                content.append("  " + field.getName() + "options = " + gson.toJson(field.getFieldType().getOptions()) + ";\n");
             }
         });
 
@@ -423,6 +425,9 @@ public class FrontGenerator {
                 } else if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
 
                     content.append("        <div class=\"ui-g\" style=\"width:250px;margin-bottom:10px\">\n");
+//                    field.getFieldType().getOptionMap().forEach((k, v) -> {
+//                        content.append("            <div class=\"ui-g-12\"><p-radioButton name=\"" + field.getName() + "RadioButton\" value=\"" + v + "\" label=\"" + k + "\" [(ngModel)]=\"#LowerCase.").append(field.getName()).append("\"  inputId=\"opt").append(v).append("\" ></p-radioButton></div>\n");
+//                    });
                     field.getFieldType().getOptionMap().forEach((k, v) -> {
                         content.append("            <div class=\"ui-g-12\"><p-radioButton name=\"" + field.getName() + "RadioButton\" value=\"" + v + "\" label=\"" + k + "\" [(ngModel)]=\"#LowerCase.").append(field.getName()).append("\"  inputId=\"opt").append(v).append("\" ></p-radioButton></div>\n");
                     });
@@ -508,6 +513,7 @@ public class FrontGenerator {
                 "          <ng-template pTemplate=\"body\" let-item let-i=\"rowIndex\">\n" +
                 "            <tr>\n");
         content.append("              <td colspan=\"1\">{{i+1}}</td>\n");
+        Gson gson = new Gson();
         entity.getEntityFieldDefinitionList().forEach(field -> {
             if (field.getFieldType().getType().toLowerCase().contains("Date".toLowerCase())) {
                 content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + " | jalalitime }} </td>\n");
@@ -515,11 +521,12 @@ public class FrontGenerator {
                 content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + "}} </td>\n");
             } else if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.DROP_DOWN.getValue().toLowerCase())) {
                 if (field.getFieldType().getOptions() != null) {
-                    content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + " | optionConverter : " + field.getFieldType().getOptions() + "}} </td>\n");
+
+                    content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + " | optionConverter : " + gson.toJson(field.getFieldType().getOptions()) + "}} </td>\n");
                 }
             } else if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
                 if (field.getFieldType().getOptions() != null) {
-                    content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + " | optionConverter : " + field.getFieldType().getOptions() + "}} </td>\n");
+                    content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + " | optionConverter : " + gson.toJson(field.getFieldType().getOptions()) + "}} </td>\n");
                 }
             } else {
                 content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">\n" +
@@ -753,7 +760,7 @@ public class FrontGenerator {
         path += "src\\app\\components\\sidebar\\sidebar.component.html";
         String content = new String(Files.readAllBytes(Paths.get(path)));
 
-        content = content.replaceAll("nicico-project-name", projectName);
+        content = content.replaceAll("#front-project-name", projectName);
 
         File file = new File(path);
         file.delete();
@@ -765,33 +772,33 @@ public class FrontGenerator {
     }
 
 
-    public static void replaceText(String frontProjectPath, String projectName) {
-
-        File folder = new File(frontProjectPath);
-        File[] listOfFiles = folder.listFiles();
-        for (File file : listOfFiles) {
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(file));
-
-                String line = "", oldtext = "";
-                while ((line = reader.readLine()) != null) {
-                    oldtext += line + "\r\n";
-                }
-                reader.close();
-
-                String replacedtext = oldtext.replaceAll("general-web", projectName);
-
-                FileWriter writer = new FileWriter(file);
-                writer.write(replacedtext);
-
-                writer.close();
-
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
-        }
-
-    }
+//    public static void replaceText(String frontProjectPath, String projectName) {
+//
+//        File folder = new File(frontProjectPath);
+//        File[] listOfFiles = folder.listFiles();
+//        for (File file : listOfFiles) {
+//            try {
+//                BufferedReader reader = new BufferedReader(new FileReader(file));
+//
+//                String line = "", oldtext = "";
+//                while ((line = reader.readLine()) != null) {
+//                    oldtext += line + "\r\n";
+//                }
+//                reader.close();
+//
+//                String replacedtext = oldtext.replaceAll("general-web", projectName);
+//
+//                FileWriter writer = new FileWriter(file);
+//                writer.write(replacedtext);
+//
+//                writer.close();
+//
+//            } catch (IOException ioe) {
+//                ioe.printStackTrace();
+//            }
+//        }
+//
+//    }
 
 
     public static void extractZip(File zipfile, File outdir) {

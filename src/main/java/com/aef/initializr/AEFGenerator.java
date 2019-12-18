@@ -1,95 +1,50 @@
 package com.aef.initializr;
 
 
+import com.aef.initializr.dto.ProjectDto;
+import com.aef.initializr.model.Project;
+import com.aef.initializr.service.ProjectService;
 import com.aef.initializr.types.ComponentTypes;
 import com.aef.initializr.types.EntityDefinition;
 import com.aef.initializr.types.EntityFieldDefinition;
 import com.aef.initializr.types.SystemDefinition;
 import com.google.common.base.CaseFormat;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.google.gson.Gson;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Service
 public class AEFGenerator {
 
-//    public static void main(String args[]) throws IOException {
-//
-//
-//        String dataSourceUrl = InitializrReaderUtility.getResourceProperity("datasource.url");
-//        String dataSourceUsername = InitializrReaderUtility.getResourceProperity("datasource.username");
-//        String dataSourcePassword = InitializrReaderUtility.getResourceProperity("datasource.password");
-//        String contextPath = InitializrReaderUtility.getResourceProperity("context.path");
-//        String portNumber = InitializrReaderUtility.getResourceProperity("port.number");
-//        String basePackage = InitializrReaderUtility.getResourceProperity("base.package");
-//        String targetPath = InitializrReaderUtility.getResourceProperity("target.path");
-//        String projectName = InitializrReaderUtility.getResourceProperity("project.name");
-//        String projectDescription = InitializrReaderUtility.getResourceProperity("project.description");
-//        String artifactId = InitializrReaderUtility.getResourceProperity("maven.artifact.id");
-//        String groupId = InitializrReaderUtility.getResourceProperity("maven.group.id");
-//        String jwtKey = InitializrReaderUtility.getResourceProperity("jwt.key");
-//        String jwtExpiration = InitializrReaderUtility.getResourceProperity("jwt.expiration");
-//        boolean validationEnabled = Boolean.parseBoolean(InitializrReaderUtility.getResourceProperity("validation.enabled"));
-//
-//        String frontProjectName = InitializrReaderUtility.getResourceProperity("front.project.name");
-//        String frontProjectPath = InitializrReaderUtility.getResourceProperity("front.target.path");
-//        String frontProjectFarsiPath = InitializrReaderUtility.getResourceProperity("front.project.farsi.name");
-//
-//        List<String> entities = findEntities();
-//        LinkedHashMap<String, String> farsiNames = findEntitiesFarsiNames();
-//        LinkedHashMap<String, String> entityLabels = findEntitiesLabels();
-//        LinkedHashMap<String, LinkedHashMap<String, String>> farsiFields = findFieldsFarsiNames();
-//
-//
-//        FrontGenerator frontGenerator = new FrontGenerator();
-//        frontGenerator.generateStructureOfProject(frontProjectName, frontProjectPath);
-//
-//        generateAll(basePackage,
-//                entities,
-//                targetPath,
-//                projectName,
-//                projectDescription,
-//                artifactId,
-//                groupId,
-//                dataSourceUrl,
-//                dataSourceUsername,
-//                dataSourcePassword,
-//                contextPath,
-//                portNumber,
-//                jwtKey,
-//                jwtExpiration,
-//                validationEnabled,
-//                frontProjectPath,
-//                farsiNames,
-//                farsiFields,
-//                entityLabels);
-//
-//
-//    }
+    private final ProjectService projectService;
 
-//    public static void generateAll(String basePackage,
-//                                   List<String> entityNameList,
-//                                   String targetPath,
-//                                   String projectName,
-//                                   String projectDescription,
-//                                   String artifcatId,
-//                                   String groupId,
-//                                   String dataSourceUrl,
-//                                   String dataSourceUsername,
-//                                   String dataSourcePassword,
-//                                   String contextPath,
-//                                   String portNumber,
-//                                   String jwtKey,
-//                                   String jwtExpiration,
-//                                   boolean validationEnabled,
-//                                   String frontProjectPath,
-//                                   LinkedHashMap<String, String> farsiNames,
-//                                   LinkedHashMap<String, LinkedHashMap<String, String>> farsiFields,
-//                                   LinkedHashMap<String, String> entityLabels) throws IOException {
+    @Autowired
+    public AEFGenerator(ProjectService projectService) {
+        this.projectService = projectService;
+    }
 
+    public ProjectDto saveProject(SystemDefinition systemDefinition) {
+        ProjectDto project = new ProjectDto();
+        project.setName(systemDefinition.getBackendConfig().getMavenConfig().getProjectName());
+        project.setGenerationDate(new Date());
+        project.setBackendGenerationPath(systemDefinition.getBackendConfig().getContextPath());
+        project.setFrontendGenerationPath(systemDefinition.getFrontendConfig().getTargetPath());
+        Gson gson = new Gson();
+        project.setJonMessage(gson.toJson(systemDefinition));
+        return projectService.save(project);
+    }
+
+    @Transactional
     public void generateAll(SystemDefinition systemDefinition) throws IOException {
 
+
+        saveProject(systemDefinition);
 
         generateStructureOfProject(systemDefinition.getBackendConfig().getMavenConfig().getProjectName(),
                 systemDefinition.getBackendConfig().getBasePackage(),
@@ -241,6 +196,7 @@ public class AEFGenerator {
         FrontGenerator.refactorAppModule(systemDefinition.getFrontendConfig().getTargetPath(), entityNameList);
         FrontGenerator.generateRouter(systemDefinition.getFrontendConfig().getTargetPath(), entityNameList);
         FrontGenerator.generateSidebarComponent(systemDefinition.getFrontendConfig().getTargetPath(), systemDefinition.getEntityDefinitionList());
+        FrontGenerator.generateSidebarComponentView(systemDefinition.getFrontendConfig().getTargetPath(), systemDefinition.getFrontendConfig().getProjectFarsiName());
         FrontGenerator.generateProxyConf(systemDefinition.getFrontendConfig().getTargetPath(),
                 systemDefinition.getBackendConfig().getContextPath(),
                 systemDefinition.getBackendConfig().getBackendPortNumber());

@@ -2,6 +2,7 @@ package com.aef.initializr.rest;
 
 import com.aef.initializr.AEFGenerator;
 import com.aef.initializr.types.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -11,6 +12,13 @@ import java.util.ArrayList;
 @RequestMapping("/generator")
 public class GeneratorRestService {
 
+
+    private final AEFGenerator aefGenerator;
+
+    @Autowired
+    public GeneratorRestService(AEFGenerator aefGenerator) {
+        this.aefGenerator = aefGenerator;
+    }
 
     @GetMapping("/sample")
     public SystemDefinition generateSampleJson() {
@@ -119,7 +127,6 @@ public class GeneratorRestService {
     @PostMapping("/generate")
     public void generateFromJson(@RequestBody SystemDefinition systemDefinition) throws IOException {
 
-        AEFGenerator aefGenerator = new AEFGenerator();
         aefGenerator.generateAll(systemDefinition);
     }
 
