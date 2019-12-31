@@ -117,7 +117,7 @@ public class FrontGenerator {
         entity.getEntityFieldDefinitionList().forEach(field -> {
             if (entitiesList.contains(field.getFieldType().getType())) {
                 if (!field.getFieldType().getType().equals(entity.getName())) {
-                    content.append("import {").append(field.getFieldType().getType()).append("Service} from '../").append(field.getFieldType().getType().toLowerCase()).append("/").append(field.getFieldType().getType().toLowerCase()).append(".service'; \n");
+                    content.append("import {").append(field.getFieldType().getType()).append("Service} from '../").append(GeneratorTools.camelToDashedSnake(field.getFieldType().getType()).toLowerCase()).append("/").append(GeneratorTools.camelToSnake(field.getFieldType().getType()).toLowerCase()).append(".service'; \n");
                 }
             }
         });
@@ -253,7 +253,7 @@ public class FrontGenerator {
                         "    let query = new QueryOptions();\n" +
                         "    query.options = [{key: 'firstIndex', value: event.first}, {key: 'pageSize', value: event.rows}];\n" +
                         "    this." + field.getFieldType().getType().toLowerCase() + "Service.list(query, 'search').subscribe(res => {\n" +
-                        "      this." + field.getFieldType().getType().toLowerCase() + "List = res.data;\n" +
+                        "      this." + field.getName() + "List = res.data;\n" +
                         "    });\n" +
                         "  }\n\n");
             }
