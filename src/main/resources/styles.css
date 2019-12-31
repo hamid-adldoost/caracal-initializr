@@ -1,0 +1,122 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import '../node_modules/primeng/resources/themes/omega/theme.css';
+@import '../node_modules/primeng/resources/primeng.min.css';
+@import 'assets/css/material-icon.css';
+@import "../node_modules/primeicons/primeicons.css";
+@import "assets/css/custom.css";
+/*@import 'https://www.w3schools.com/w3css/4/w3.css';*/
+
+
+@font-face {
+  font-family: 'iran-sans-web';
+  src: url('/assets/fonts/IRANSansWeb.eot') format('eot'),
+  url('/assets/fonts/IRANSansWeb.ttf') format('truetype');
+}
+
+body button{
+  font-family: iran-sans-web !important;
+}
+
+.ui-widget{
+  font-family: iran-sans-web;
+}
+
+.ui-widget input{
+  font-family: iran-sans-web;
+}
+
+.navbar{
+  font-family: iran-sans-web;
+  z-index: 999;
+}
+
+.ui-paginator{
+  direction: ltr;
+}
+
+.ui-dropdown-panel .ui-dropdown-item{
+  text-align: right;
+}
+
+
+label.ui-chkbox-label {
+  font-size: 11pt;
+  color: black;
+}
+
+p{
+  font-family: iran-sans-web;
+}
+
+h6, h5, h4, h3, h2, h1 {
+  font-family: iran-sans-web;
+}
+
+th{
+  text-align: right !important;
+}
+
+p-dropdown .ui-dropdown {
+  width: 85% !important;
+}
+
+.ui-message-text {
+  font-size: 12pt;
+}
+
+.main-panel {
+  float: left !important;
+  /*width: calc(100% - 50px);*/
+  width: 84%;
+}
+
+.sidebar {
+  right: 0 !important;
+  left: auto !important;
+  /*width: 300px !important;*/
+}
+
+.sidebar-wrapper {
+  /*width: 15vw !important;*/
+  /*width: 90% !important;*/
+}
+
+.sidebar[data-color="green"] .nav a,
+.off-canvas-sidebar[data-color="green"] .nav  a {
+  /*background-color: transparent;*/
+  border-color: #bdbdbd;
+  border-style: solid;
+  border-radius: 3px;
+  border-width: 1px;
+}
+
+.ui-panel .ui-panel-content {
+  padding: 20px;
+}
+
+input {
+  width: 85%;
+  margin: 5px;
+}
+
+.col-lg-4 {
+  float: right !important;
+}
+
+.navbar-toggle {
+  margin-right: -40px !important;
+}
+
+.btn {
+  padding: 4px 8px !important;
+}
+
+.tableWrapper {
+  overflow: auto;
+  overflow-x: scroll;
+}
+
+th, td{
+  overflow: hidden;
+}

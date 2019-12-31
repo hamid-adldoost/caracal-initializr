@@ -473,9 +473,9 @@ public class FrontGenerator {
                         "        </div>\n" +
                         "      </div>\n" +
                         "\n" +
-                        "      <div class=\"row\" *ngIf=\"items\" style=\"margin-top: 5px;\">\n" +
+                        "      <div class=\"row tableWrapper\" *ngIf=\"items\" style=\"margin-top: 5px;\">\n" +
                         "        <p-table [value]=\"items.data\" [responsive]=\"true\" [paginator]=\"true\" (onLazyLoad)=\"loadItems($event)\"\n" +
-                        "                 [rows]=\"20\" [totalRecords]=\"items.count\" emptymessage=\"درخواستی یافت نشد\">\n" +
+                        "                 [rows]=\"20\" [totalRecords]=\"items.count\" emptymessage=\"درخواستی یافت نشد\" [style]=\"{minWidth:'100%', width:'" + entity.getEntityFieldDefinitionList().size() * 100 + "px'}\">\n" +
                         "          <ng-template pTemplate=\"header\">\n" +
                         "            <tr>\n");
         content.append("              <th colspan=\"1\">#</th>\n");
@@ -488,7 +488,7 @@ public class FrontGenerator {
         content.append("            </tr>\n");
 
         content.append("            <tr>\n" +
-                "              <th style=\"overflow: hidden;\" colspan=\"1\"><p-button label=\"جستجو\" (onClick)=\"loadItems($event)\" icon=\"pi pi-search\"></p-button></th>\n");
+                "              <th style=\"overflow: hidden;\" colspan=\"1\"><button pButton class=\"btn btn-primary\" (click)=\"loadItems($event)\" icon=\"pi pi-search\"></button></th>\n");
         entity.getEntityFieldDefinitionList().forEach(field -> {
             if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())) {
                 content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\"><input name=\"" + field.getName() + "FilterInput\" pInputText [(ngModel)]=\"search" + entity.getName() + "." + field.getName() + "\"></th>\n");
@@ -562,7 +562,7 @@ public class FrontGenerator {
         result = result.replace("#entity", entity.getName());
         result = result.replace("#FarsiName", entity.getFarsiName());
 
-        System.out.printf(result);
+//        System.out.printf(result);
         path += "src\\app\\" + GeneratorTools.camelToDashedSnake(entity.getName()).toLowerCase() + "\\";
         File file = new File(path);
         file.mkdirs();
