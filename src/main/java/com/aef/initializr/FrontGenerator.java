@@ -562,7 +562,7 @@ public class FrontGenerator {
         result = result.replace("#entity", entity.getName());
         result = result.replace("#FarsiName", entity.getFarsiName());
 
-//        System.out.printf(result);
+        System.out.println(result);
         path += "src\\app\\" + GeneratorTools.camelToDashedSnake(entity.getName()).toLowerCase() + "\\";
         File file = new File(path);
         file.mkdirs();
