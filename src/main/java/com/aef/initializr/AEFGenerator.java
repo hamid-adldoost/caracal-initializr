@@ -46,6 +46,8 @@ public class AEFGenerator {
 
         saveProject(systemDefinition);
 
+        validateDefinition(systemDefinition);
+
         generateStructureOfProject(systemDefinition.getBackendConfig().getMavenConfig().getProjectName(),
                 systemDefinition.getBackendConfig().getBasePackage(),
                 systemDefinition.getBackendConfig().getTargetPath());
@@ -99,7 +101,8 @@ public class AEFGenerator {
                     systemDefinition.getBackendConfig().getDatabaseConnection().getDatasourcePassword(),
                     systemDefinition.getBackendConfig().getContextPath(),
                     systemDefinition.getBackendConfig().getBackendPortNumber(),
-                    systemDefinition.getBackendConfig().getBasePackage());
+                    systemDefinition.getBackendConfig().getBasePackage(),
+                    systemDefinition.getBackendConfig().getFileUploadPath());
         }
 
 
@@ -135,6 +138,7 @@ public class AEFGenerator {
             generateRandomStringCodeUtility(commonPath.getPath(), basePackage);
             generateRestErrorMessageClass(commonPath.getPath(), basePackage);
             generateSecurityServiceExceptionClass(commonPath.getPath(), basePackage);
+            generateFileStoragePropertiesFile(commonPath.getPath(), basePackage);
         }
 
         //fill jwt package
@@ -160,15 +164,22 @@ public class AEFGenerator {
         systemDefinition.getEntityDefinitionList().forEach(entity -> {
             try {
                 if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateEntities()) {
+
+                    generateAttachmentEntity(basePackage, modelPath.getPath());
                     generateEntity(basePackage, entity, modelPath.getPath());
                 }
                 if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateDto()) {
+                    generateDownloadAttachmentDto(basePackage, dtoPath.getPath());
+                    generateAttachmentDto(basePackage, dtoPath.getPath());
                     generateDto(basePackage, entity, dtoPath.getPath(), entityNameList);
                 }
                 if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateDao()) {
+                    generateAttachmentDao(basePackage, daoPath.getPath());
                     generateDao(basePackage, entity.getName(), daoPath.getPath());
                 }
                 if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateService()) {
+                    generateAttachmentService(basePackage, servicePath.getPath());
+                    generateFileStorageService(basePackage, servicePath.getPath());
                     generateService(basePackage, entity.getName(), servicePath.getPath());
                 }
                 if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateGeneralService()) {
@@ -178,6 +189,7 @@ public class AEFGenerator {
                     generatePagedResultClass(servicePath.getPath(), basePackage);
                 }
                 if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateRest()) {
+                    generateAttachmentRestService(basePackage, restPath.getPath());
                     generateRestService(basePackage, entity, restPath.getPath(), systemDefinition.getBackendConfig().getBackendGenerationConfig().isGeneratePermissions());
                 }
 
@@ -205,6 +217,15 @@ public class AEFGenerator {
         FrontGenerator.generateProductionEnvironment(systemDefinition.getFrontendConfig().getTargetPath(),
                 systemDefinition.getBackendConfig().getContextPath());
 
+    }
+
+    private void validateDefinition(SystemDefinition systemDefinition) {
+        //todo: check and set defauls
+
+        if(systemDefinition.getBackendConfig().getFileUploadPath() == null ||
+            systemDefinition.getBackendConfig().getFileUploadPath().isEmpty()) {
+            systemDefinition.getBackendConfig().setFileUploadPath("C:\\\\upload\\\\");
+        }
     }
 
     private static String generateLoginRestService(String path, String basePackage) throws FileNotFoundException {
@@ -415,6 +436,11 @@ public class AEFGenerator {
             content += "    public static final String AUTHORITY_REMOVE_" + camelToSnake(e).toUpperCase() + " = \"AUTHORITY_REMOVE_" + camelToSnake(e).toUpperCase() + "\";\n";
         }
 
+        content += "    public static final String AUTHORITY_FIND_ATTACHMENT = \"AUTHORITY_FIND_ATTACHMENT\";\n" +
+                "    public static final String AUTHORITY_SEARCH_ATTACHMENT = \"AUTHORITY_SEARCH_ATTACHMENT\";\n" +
+                "    public static final String AUTHORITY_SAVE_ATTACHMENT = \"AUTHORITY_SAVE_ATTACHMENT\";\n" +
+                "    public static final String AUTHORITY_REMOVE_ATTACHMENT = \"AUTHORITY_REMOVE_ATTACHMENT\";";
+
         content += "\n\n";
         content += "    public static List<String> getAllRoles() {\n";
         content += "        List<String> roles = new ArrayList<>();\n";
@@ -424,6 +450,11 @@ public class AEFGenerator {
             content += "        roles.add(AUTHORITY_SAVE_" + camelToSnake(e).toUpperCase() + ");\n";
             content += "        roles.add(AUTHORITY_REMOVE_" + camelToSnake(e).toUpperCase() + ");\n";
         }
+        content += "        roles.add(AUTHORITY_FIND_ATTACHMENT);\n" +
+                "        roles.add(AUTHORITY_SEARCH_ATTACHMENT);\n" +
+                "        roles.add(AUTHORITY_SAVE_ATTACHMENT);\n" +
+                "        roles.add(AUTHORITY_REMOVE_ATTACHMENT);";
+
         content += "    return roles;";
         content += "    }\n";
         content += "}\n";
@@ -698,6 +729,147 @@ public class AEFGenerator {
         return result;
     }
 
+    private static String generateAttachmentEntity(String basePackage, String path) throws FileNotFoundException {
+        StringBuilder content = new StringBuilder("");
+        content.append("package #package.model;\n" +
+                "\n" +
+                "import com.aef3.data.api.DomainEntity;\n" +
+                "\n" +
+                "import javax.persistence.*;\n" +
+                "import java.util.Date;\n" +
+                "import java.util.Objects;\n" +
+                "\n" +
+                "\n" +
+                "/* Generated By AEF Generator ( Powered by Dr.Adldoost :D ) */\n" +
+                "\n" +
+                "@Entity\n" +
+                "@Table(name = \"attachment\")\n" +
+                "public class Attachment implements DomainEntity {\n" +
+                "\n" +
+                "\n" +
+                "    @Id\n" +
+                "    @Column(name = \"id\")\n" +
+                "    @GeneratedValue(strategy = GenerationType.IDENTITY)\n" +
+                "    private Long id;\n" +
+                "\n" +
+                "    @Column(name = \"name\")\n" +
+                "    private String name;\n" +
+                "\n" +
+                "    @Column(name = \"upload_path\", length = 255)\n" +
+                "    private String uploadPath;\n" +
+                "\n" +
+                "    @Column(name = \"description\", length = 500)\n" +
+                "    private String description;\n" +
+                "\n" +
+                "    @Column(name = \"related_entity\")\n" +
+                "    private String relatedEntity;\n" +
+                "\n" +
+                "    @Column(name = \"related_record_id\")\n" +
+                "    private Long relatedRecordId;\n" +
+                "\n" +
+                "    @Column(name = \"file_md5\", length = 512)\n" +
+                "    private String fileMd5;\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "    public Long getId() {\n" +
+                "        return id;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setId(Long id) {\n" +
+                "       this.id = id;\n" +
+                "    }\n" +
+                "\n" +
+                "\n" +
+                "    public String getName() {\n" +
+                "        return name;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setName(String name) {\n" +
+                "       this.name = name;\n" +
+                "    }\n" +
+                "\n" +
+                "\n" +
+                "    public String getUploadPath() {\n" +
+                "        return uploadPath;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setUploadPath(String uploadPath) {\n" +
+                "       this.uploadPath = uploadPath;\n" +
+                "    }\n" +
+                "\n" +
+                "\n" +
+                "    public String getDescription() {\n" +
+                "        return description;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setDescription(String description) {\n" +
+                "       this.description = description;\n" +
+                "    }\n" +
+                "\n" +
+                "\n" +
+                "    public String getRelatedEntity() {\n" +
+                "        return relatedEntity;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setRelatedEntity(String relatedEntity) {\n" +
+                "       this.relatedEntity = relatedEntity;\n" +
+                "    }\n" +
+                "\n" +
+                "\n" +
+                "    public Long getRelatedRecordId() {\n" +
+                "        return relatedRecordId;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setRelatedRecordId(Long relatedRecordId) {\n" +
+                "       this.relatedRecordId = relatedRecordId;\n" +
+                "    }\n" +
+                "\n" +
+                "\n" +
+                "    public String getFileMd5() {\n" +
+                "        return fileMd5;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setFileMd5(String fileMd5) {\n" +
+                "       this.fileMd5 = fileMd5;\n" +
+                "    }\n" +
+                "\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public boolean equals(Object o) {\n" +
+                "        if (this == o) return true;\n" +
+                "        if (!(o instanceof Attachment)) return false;\n" +
+                "        Attachment attachment = (Attachment) o;\n" +
+                "        return Objects.equals(id, attachment.id);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public int hashCode() {\n" +
+                "\n" +
+                "        return Objects.hash(id);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public String toString() {\n" +
+                "        return \"Attachment{\" +\n" +
+                "                \"id=\" + id +\n" +
+                "                '}';\n" +
+                "    }\n" +
+                "}");
+
+
+        String result = content.toString().replaceAll("#package", basePackage);
+
+        System.out.println(result);
+        File file = new File(path);
+        file.mkdirs();
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/Attachment.java"))) {
+            out.print(result);
+        }
+        return result;
+    }
+
     public static String generateEntity(String basePackage, EntityDefinition entity, String targetPath) throws FileNotFoundException {
         StringBuilder content = new StringBuilder("package #package.model;\n" +
                 "\n" +
@@ -918,8 +1090,13 @@ public class AEFGenerator {
                 "\n" +
                 "import org.springframework.boot.SpringApplication;\n" +
                 "import org.springframework.boot.autoconfigure.SpringBootApplication;\n" +
+                "import #package.common.FileStorageProperties;\n" +
+                "import org.springframework.boot.context.properties.EnableConfigurationProperties;" +
                 "\n" +
                 "@SpringBootApplication\n" +
+                "@EnableConfigurationProperties({\n" +
+                "\t\tFileStorageProperties.class\n" +
+                "})" +
                 "public class #projNameApplication {\n" +
                 "\n" +
                 "\tpublic static void main(String[] args) {\n" +
@@ -937,6 +1114,37 @@ public class AEFGenerator {
 
 
         try (PrintStream out = new PrintStream(new FileOutputStream(path + "/" + camelCaseProjectName + "Application.java"))) {
+            out.print(result);
+        }
+        return result;
+    }
+
+    private static String generateAttachmentDao(String basePackage, String path) throws FileNotFoundException {
+        StringBuilder content = new StringBuilder("");
+        content.append("package #package.dao;\n" +
+                "\n" +
+                "import com.aef3.data.impl.AbstractDAOImpl;\n" +
+                "import #package.model.Attachment;\n" +
+                "import org.springframework.stereotype.Repository;\n" +
+                "\n" +
+                "\n" +
+                "/* Generated By AEF Generator ( Powered by Dr.Adldoost :D ) */\n" +
+                "\n" +
+                "@Repository\n" +
+                "public class AttachmentDao extends AbstractDAOImpl<Attachment, Long> {\n" +
+                "\n" +
+                "    public AttachmentDao() {\n" +
+                "        super(Attachment.class);\n" +
+                "    }\n" +
+                "}");
+
+        String result = content.toString().replaceAll("#package", basePackage);
+
+        System.out.println(result);
+        File file = new File(path);
+        file.mkdirs();
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/AttachmentDao.java"))) {
             out.print(result);
         }
         return result;
@@ -974,6 +1182,219 @@ public class AEFGenerator {
         try (PrintStream out = new PrintStream(new FileOutputStream(targetPath + "/" + entityName + "Dao.java"))) {
             out.print(result);
         }
+
+    }
+
+    private static String generateFileStorageService(String basePackage, String path) throws FileNotFoundException {
+        StringBuilder content = new StringBuilder("");
+        content.append("package #package.service;\n" +
+                "\n" +
+                "import #package.common.BusinessExceptionCode;\n" +
+                "import #package.common.ErrorCodeReaderUtil;\n" +
+                "import #package.common.FileStorageProperties;\n" +
+                "import org.springframework.beans.factory.annotation.Autowired;\n" +
+                "import org.springframework.beans.factory.annotation.Value;\n" +
+                "import org.springframework.core.io.Resource;\n" +
+                "import org.springframework.core.io.UrlResource;\n" +
+                "import org.springframework.stereotype.Service;\n" +
+                "import org.springframework.util.StringUtils;\n" +
+                "import org.springframework.web.multipart.MultipartFile;\n" +
+                "\n" +
+                "import java.io.File;\n" +
+                "import java.io.IOException;\n" +
+                "import java.io.InputStream;\n" +
+                "import java.net.MalformedURLException;\n" +
+                "import java.nio.file.Files;\n" +
+                "import java.nio.file.Path;\n" +
+                "import java.nio.file.Paths;\n" +
+                "import java.nio.file.StandardCopyOption;\n" +
+                "import java.text.MessageFormat;\n" +
+                "import java.text.SimpleDateFormat;\n" +
+                "import java.util.Date;\n" +
+                "import java.util.UUID;\n" +
+                "\n" +
+                "@Service\n" +
+                "public class FileStorageService {\n" +
+                "\n" +
+                "    @Value(\"${file.upload-dir}\")\n" +
+                "    String uploadBaseUrl;\n" +
+                "\n" +
+                "    @Autowired\n" +
+                "    FileStorageProperties storageProperties;\n" +
+                "\n" +
+                "    public String storeFile(MultipartFile file) {\n" +
+                "        // Normalize file name\n" +
+                "        if(file.getOriginalFilename() == null || file.getOriginalFilename().isEmpty()) {\n" +
+                "            throw new RuntimeException(BusinessExceptionCode.BAD_INPUT.name());\n" +
+                "        }\n" +
+                "        String fileName = StringUtils.cleanPath(file.getOriginalFilename());\n" +
+                "        System.out.println(file.getContentType());\n" +
+                "\n" +
+                "        try {\n" +
+                "//            UUID uuid = UUID.randomUUID();\n" +
+                "//            String randomName = uuid.toString() + fileName.substring(fileName.length()-5);\n" +
+                "            Path uploadLocation = Paths.get(storageProperties.getUploadDir());\n" +
+                "            String fileSafeName = new Date().getTime() + file.getOriginalFilename();\n" +
+                "            Path targetLocation = Paths.get(storageProperties.getUploadDir() + fileSafeName);\n" +
+                "            try {\n" +
+                "                if(!Files.exists(uploadLocation)) {\n" +
+                "                    Files.createDirectories(uploadLocation);\n" +
+                "                }\n" +
+                "            } catch (Exception ex) {\n" +
+                "\n" +
+                "                throw new RuntimeException(BusinessExceptionCode.COULD_NOT_CREATE_DIRECTORY.name(),ex);\n" +
+                "            }\n" +
+                "            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);\n" +
+                "            java.text.DateFormat dateFormat = new SimpleDateFormat(\"yyyy-MM-dd\");\n" +
+                "            String dateString = dateFormat.format(new Date());\n" +
+                "            return dateString + \"/\" + fileSafeName;\n" +
+                "        } catch (IOException ex) {\n" +
+                "            throw new RuntimeException(MessageFormat.format(ErrorCodeReaderUtil.getResourceProperity(BusinessExceptionCode.COULD_NOT_STORED_FILE_RETRY.name()),fileName));\n" +
+                "        }\n" +
+                "    }\n" +
+                "\n" +
+                "    public String storeFile(String originalFilename, InputStream inputStream) {\n" +
+                "        // Normalize file name\n" +
+                "        String fileName = StringUtils.cleanPath(originalFilename);\n" +
+                "//        System.out.println(file.getContentType());\n" +
+                "\n" +
+                "        try {\n" +
+                "            // Check if the file's name contains invalid characters\n" +
+                "            //            if(fileName.contains(\"..\")) {\n" +
+                "            //                throw new RuntimeException(\"Sorry! Filename contains invalid path sequence \" + fileName);\n" +
+                "            //            }\n" +
+                "            // Copy file to the target location (Replacing existing file with the same name)\n" +
+                "\n" +
+                "            UUID uuid = UUID.randomUUID();\n" +
+                "            String randomName = uuid.toString() + fileName.substring(fileName.length() - 5, fileName.length());\n" +
+                "            Path uploadLocation = Paths.get(storageProperties.getUploadDir());\n" +
+                "            Path targetLocation = Paths.get(storageProperties.getUploadDir() + randomName);\n" +
+                "            try {\n" +
+                "                if (!Files.exists(uploadLocation)) {\n" +
+                "                    Files.createDirectories(uploadLocation);\n" +
+                "                }\n" +
+                "            } catch (Exception ex) {\n" +
+                "                throw new RuntimeException(BusinessExceptionCode.COULD_NOT_CREATE_DIRECTORY.name(),ex);\n" +
+                "//                throw new RuntimeException(\"Could not create the directory where the uploaded files will be stored.\", ex);\n" +
+                "            }\n" +
+                "            Files.copy(inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING);\n" +
+                "            java.text.DateFormat dateFormat = new SimpleDateFormat(\"yyyy-MM-dd\");\n" +
+                "            String dateString = dateFormat.format(new Date());\n" +
+                "            return dateString + \"/\" + randomName;\n" +
+                "        } catch (IOException ex) {\n" +
+                "            throw  new RuntimeException(BusinessExceptionCode.COULD_NOT_STORED_FILE_RETRY.name(),ex);\n" +
+                "//            throw new RuntimeException(\"Could not store file \" + fileName + \". Please try again!\", ex);\n" +
+                "        }\n" +
+                "    }\n" +
+                "\n" +
+                "    public Resource loadFileAsResource(String relativePath) {\n" +
+                "        try {\n" +
+                "            Path filePath = Paths.get(uploadBaseUrl + relativePath);\n" +
+                "            Resource resource = new UrlResource(filePath.toUri());\n" +
+                "            if(resource.exists()) {\n" +
+                "                return resource;\n" +
+                "            } else {\n" +
+                "                throw new RuntimeException(MessageFormat.format(BusinessExceptionCode.FILE_NOT_FOUND_PATH.name(),relativePath));\n" +
+                "//                throw new RuntimeException(\"File not found \" + relativePath);\n" +
+                "            }\n" +
+                "        } catch (MalformedURLException ex) {\n" +
+                "            throw new RuntimeException(MessageFormat.format(BusinessExceptionCode.FILE_NOT_FOUND_PATH.name(),relativePath),ex);\n" +
+                "            //                throw new RuntimeException(\"File not found \" + relativePath, ex);\n" +
+                "\n" +
+                "        }\n" +
+                "    }\n" +
+                "\n" +
+                "    public File loadFileAsFile(String fileName) {\n" +
+                "//        Path filePath = this.fileStorageLocation.resolve(fileName).normalize();\n" +
+                "        return new File(uploadBaseUrl +  \"/\" + fileName);\n" +
+                "    }\n" +
+                "}");
+        String result = content.toString().replaceAll("#package", basePackage);
+
+        System.out.println(result);
+        File file = new File(path);
+        file.mkdirs();
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/FileStorageService.java"))) {
+            out.print(result);
+        }
+        return result;
+
+    }
+
+    private static String generateAttachmentService(String basePackage, String path) throws FileNotFoundException {
+        StringBuilder content = new StringBuilder("");
+        content.append("package #package.service;\n" +
+                "\n" +
+                "import com.aef3.data.api.GenericEntityDAO;\n" +
+                "import com.google.common.hash.HashCode;\n" +
+                "import com.google.common.hash.Hashing;\n" +
+                "import com.google.common.io.Files;\n" +
+                "import #package.dao.AttachmentDao;\n" +
+                "import #package.dto.AttachmentDto;\n" +
+                "import #package.dto.DownloadAttachmentDto;\n" +
+                "import #package.model.Attachment;\n" +
+                "import org.springframework.beans.factory.annotation.Autowired;\n" +
+                "import org.springframework.stereotype.Service;\n" +
+                "import org.springframework.web.multipart.MultipartFile;\n" +
+                "\n" +
+                "import javax.transaction.Transactional;\n" +
+                "import java.io.File;\n" +
+                "import java.io.IOException;\n" +
+                "\n" +
+                "@Service\n" +
+                "public class AttachmentService extends GeneralServiceImpl<AttachmentDto, Attachment, Long> {\n" +
+                "\n" +
+                "\n" +
+                "    private final AttachmentDao attachmentDao;\n" +
+                "    private final FileStorageService fileStorageService;\n" +
+                "\n" +
+                "    @Autowired\n" +
+                "    public AttachmentService(AttachmentDao attachmentDao, FileStorageService fileStorageService) {\n" +
+                "        this.attachmentDao = attachmentDao;\n" +
+                "        this.fileStorageService = fileStorageService;\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    protected GenericEntityDAO getDAO() {\n" +
+                "        return attachmentDao;\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public AttachmentDto getDtoInstance() {\n" +
+                "        return new AttachmentDto();\n" +
+                "    }\n" +
+                "\n" +
+                "    @Transactional\n" +
+                "    public DownloadAttachmentDto uploadFile(MultipartFile file, String entity) throws IOException {\n" +
+                "        String path = fileStorageService.storeFile(file);\n" +
+                "        File savedFile = fileStorageService.loadFileAsFile(path);\n" +
+                "        Attachment attachment = new Attachment();\n" +
+                "        attachment.setName(file.getOriginalFilename());\n" +
+                "        HashCode hashCode = Files.hash(savedFile, Hashing.md5());\n" +
+                "        attachment.setFileMd5(hashCode.toString());\n" +
+                "        attachment.setRelatedEntity(entity);\n" +
+                "        attachment.setUploadPath(path);\n" +
+                "        attachment = attachmentDao.save(attachment);\n" +
+                "\n" +
+                "        DownloadAttachmentDto dto = new DownloadAttachmentDto();\n" +
+                "        dto.setDownloadPath(attachment.getUploadPath());\n" +
+                "        dto.setFileName(attachment.getName());\n" +
+                "        dto.setId(attachment.getId());\n" +
+                "        return dto;\n" +
+                "    }\n" +
+                "}\n");
+
+        String result = content.toString().replaceAll("#package", basePackage);
+
+        System.out.println(result);
+        File file = new File(path);
+        file.mkdirs();
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/AttachmentService.java"))) {
+            out.print(result);
+        }
+        return result;
 
     }
 
@@ -1046,7 +1467,196 @@ public class AEFGenerator {
         return result;
     }
 
-    private static String generateDtoHeader() {
+    private static String generateDownloadAttachmentDto(String basePackage, String targetPath) throws FileNotFoundException {
+        StringBuilder content = new StringBuilder("");
+        content.append("package #package.dto;\n" +
+                "\n" +
+                "import com.fasterxml.jackson.annotation.JsonIgnoreProperties;\n" +
+                "\n" +
+                "import java.io.Serializable;\n" +
+                "\n" +
+                "@JsonIgnoreProperties(ignoreUnknown = true)\n" +
+                "public class DownloadAttachmentDto implements Serializable {\n" +
+                "\n" +
+                "    private Long id;\n" +
+                "    private String downloadPath;\n" +
+                "    private String fileName;\n" +
+                "\n" +
+                "    public Long getId() {\n" +
+                "        return id;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setId(Long id) {\n" +
+                "        this.id = id;\n" +
+                "    }\n" +
+                "\n" +
+                "    public String getDownloadPath() {\n" +
+                "        return downloadPath;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setDownloadPath(String downloadPath) {\n" +
+                "        this.downloadPath = downloadPath;\n" +
+                "    }\n" +
+                "\n" +
+                "    public String getFileName() {\n" +
+                "        return fileName;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setFileName(String fileName) {\n" +
+                "        this.fileName = fileName;\n" +
+                "    }\n" +
+                "}\n");
+
+        String result = content.toString().replaceAll("#package", basePackage);
+
+        System.out.println(result);
+        File file = new File(targetPath);
+        file.mkdirs();
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(targetPath + "/DownloadAttachmentDto.java"))) {
+            out.print(result);
+        }
+        return result;
+    }
+
+    private static String generateAttachmentDto(String basePackage, String path) throws FileNotFoundException {
+        StringBuilder content = new StringBuilder("");
+        content.append("package #package.dto;\n" +
+                "\n" +
+                "import com.aef3.data.api.DomainDto;\n" +
+                "import com.fasterxml.jackson.annotation.JsonIgnore;\n" +
+                "import #package.model.Attachment;\n" +
+                "import javax.validation.constraints.NotNull;\n" +
+                "import javax.validation.constraints.NotEmpty;\n" +
+                "import java.util.Date;\n" +
+                "\n" +
+                "\n" +
+                "/* Generated By AEF Generator ( Powered by Dr.Adldoost :D ) */\n" +
+                "\n" +
+                "public class AttachmentDto implements DomainDto<Attachment, AttachmentDto> {\n" +
+                "\n" +
+                "\n" +
+                "    private Long id;\n" +
+                "    private String name;\n" +
+                "    private String uploadPath;\n" +
+                "    private String description;\n" +
+                "    private String relatedEntity;\n" +
+                "    private Long relatedRecordId;\n" +
+                "    private String fileMd5;\n" +
+                " \n" +
+                "\n" +
+                "    public Long getId() {\n" +
+                "        return id;\n" +
+                "    }\n" +
+                "    public void setId(Long id) {\n" +
+                "        this.id = id;\n" +
+                "    }\n" +
+                "\n" +
+                "    public String getName() {\n" +
+                "        return name;\n" +
+                "    }\n" +
+                "    public void setName(String name) {\n" +
+                "        this.name = name;\n" +
+                "    }\n" +
+                "\n" +
+                "    public String getUploadPath() {\n" +
+                "        return uploadPath;\n" +
+                "    }\n" +
+                "    public void setUploadPath(String uploadPath) {\n" +
+                "        this.uploadPath = uploadPath;\n" +
+                "    }\n" +
+                "\n" +
+                "    public String getDescription() {\n" +
+                "        return description;\n" +
+                "    }\n" +
+                "    public void setDescription(String description) {\n" +
+                "        this.description = description;\n" +
+                "    }\n" +
+                "\n" +
+                "    public String getRelatedEntity() {\n" +
+                "        return relatedEntity;\n" +
+                "    }\n" +
+                "    public void setRelatedEntity(String relatedEntity) {\n" +
+                "        this.relatedEntity = relatedEntity;\n" +
+                "    }\n" +
+                "\n" +
+                "    public Long getRelatedRecordId() {\n" +
+                "        return relatedRecordId;\n" +
+                "    }\n" +
+                "    public void setRelatedRecordId(Long relatedRecordId) {\n" +
+                "        this.relatedRecordId = relatedRecordId;\n" +
+                "    }\n" +
+                "\n" +
+                "    public String getFileMd5() {\n" +
+                "        return fileMd5;\n" +
+                "    }\n" +
+                "    public void setFileMd5(String fileMd5) {\n" +
+                "        this.fileMd5 = fileMd5;\n" +
+                "    }\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "    public static AttachmentDto toDto(Attachment attachment) {\n" +
+                "\n" +
+                "        if(attachment == null)\n" +
+                "            return null; \n" +
+                "        AttachmentDto dto = new AttachmentDto();\n" +
+                "        dto.setId(attachment.getId());\n" +
+                "        dto.setName(attachment.getName());\n" +
+                "        dto.setUploadPath(attachment.getUploadPath());\n" +
+                "        dto.setDescription(attachment.getDescription());\n" +
+                "        dto.setRelatedEntity(attachment.getRelatedEntity());\n" +
+                "        dto.setRelatedRecordId(attachment.getRelatedRecordId());\n" +
+                "        dto.setFileMd5(attachment.getFileMd5());\n" +
+                "        return dto;\n" +
+                "  }\n" +
+                "\n" +
+                "\n" +
+                "    public static Attachment toEntity(AttachmentDto dto) {\n" +
+                "\n" +
+                "        if(dto == null)\n" +
+                "            return null; \n" +
+                "        Attachment attachment = new Attachment();\n" +
+                "        attachment.setId(dto.getId());\n" +
+                "        attachment.setName(dto.getName());\n" +
+                "        attachment.setUploadPath(dto.getUploadPath());\n" +
+                "        attachment.setDescription(dto.getDescription());\n" +
+                "        attachment.setRelatedEntity(dto.getRelatedEntity());\n" +
+                "        attachment.setRelatedRecordId(dto.getRelatedRecordId());\n" +
+                "        attachment.setFileMd5(dto.getFileMd5());\n" +
+                "        return attachment;\n" +
+                "  }\n" +
+                "    @Override\n" +
+                "    public Attachment toEntity() {\n" +
+                "        return AttachmentDto.toEntity(this);\n" +
+                "    }\n" +
+                "\n" +
+                "    @JsonIgnore\n" +
+                "    @Override\n" +
+                "    public AttachmentDto getInstance(Attachment attachment) {\n" +
+                "        return AttachmentDto.toDto(attachment);\n" +
+                "    }\n" +
+                "\n" +
+                "    @JsonIgnore\n" +
+                "    @Override\n" +
+                "    public AttachmentDto getInstance() {\n" +
+                "        return new AttachmentDto();\n" +
+                "    }\n" +
+                "}");
+
+        String result = content.toString().replaceAll("#package", basePackage);
+
+        System.out.println(result);
+        File file = new File(path);
+        file.mkdirs();
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/AttachmentDto.java"))) {
+            out.print(result);
+        }
+        return result;
+    }
+
+     private static String generateDtoHeader() {
 
         String content = "package #package.dto;\n" +
                 "\n" +
@@ -1248,6 +1858,124 @@ public class AEFGenerator {
 
     }
 
+    private static String generateAttachmentRestService(String basePackage, String path) throws FileNotFoundException {
+        StringBuilder content = new StringBuilder("");
+        content.append("package #package.rest;\n" +
+                "\n" +
+                "import com.aef3.data.SortUtil;\n" +
+                "import com.aef3.data.api.qbe.SortObject;\n" +
+                "import com.aef3.data.api.qbe.StringSearchType;\n" +
+                "import #package.dto.AttachmentDto;\n" +
+                "import #package.dto.DownloadAttachmentDto;\n" +
+                "import #package.service.AttachmentService;\n" +
+                "import #package.service.PagedResult;\n" +
+                "import jxl.read.biff.BiffException;\n" +
+                "import org.springframework.beans.factory.annotation.Autowired;\n" +
+                "import org.springframework.http.MediaType;\n" +
+                "import org.springframework.security.access.prepost.PreAuthorize;\n" +
+                "import org.springframework.web.bind.annotation.*;\n" +
+                "import org.springframework.web.multipart.MultipartFile;\n" +
+                "\n" +
+                "import java.io.IOException;\n" +
+                "import java.util.Collections;\n" +
+                "import java.util.List;\n" +
+                "\n" +
+                "\n" +
+                "/* Generated By AEF Generator ( Powered by Dr.Adldoost :D ) */\n" +
+                "\n" +
+                "@RestController\n" +
+                "@RequestMapping(\"/attachment\")\n" +
+                "public class AttachmentRestService {\n" +
+                "\n" +
+                "    private final AttachmentService attachmentService;\n" +
+                "\n" +
+                "    @Autowired\n" +
+                "    public AttachmentRestService(AttachmentService attachmentService) {\n" +
+                "        this.attachmentService = attachmentService;\n" +
+                "    }\n" +
+                "\n" +
+                "    @PreAuthorize(\"hasAuthority('AUTHORITY_FIND_ATTACHMENT')\")\n" +
+                "    @GetMapping(\"/{id}\")\n" +
+                "    public AttachmentDto findById(@PathVariable(name = \"id\")Long id) {\n" +
+                "        return attachmentService.findByPrimaryKey(id);\n" +
+                "    }\n" +
+                "\n" +
+                "     @PreAuthorize(\"hasAuthority('AUTHORITY_SEARCH_ATTACHMENT')\")\n" +
+                "    @GetMapping(\"/search\")\n" +
+                "    public PagedResult search(\n" +
+                "                                      @RequestParam(value = \"id\", required = false) Long id,\n" +
+                "                                      @RequestParam(value = \"name\", required = false) String name,\n" +
+                "                                      @RequestParam(value = \"uploadPath\", required = false) String uploadPath,\n" +
+                "                                      @RequestParam(value = \"description\", required = false) String description,\n" +
+                "                                      @RequestParam(value = \"relatedEntity\", required = false) String relatedEntity,\n" +
+                "                                      @RequestParam(value = \"relatedRecordId\", required = false) Long relatedRecordId,\n" +
+                "                                      @RequestParam(value = \"fileMd5\", required = false) String fileMd5,\n" +
+                "                                      @RequestParam(value = \"firstIndex\", required = false) Integer firstIndex,\n" +
+                "                                      @RequestParam(value = \"pageSize\", required = false) Integer pageSize,\n" +
+                "                                      @RequestParam(value = \"sortField\", required = false) String sortField,\n" +
+                "                                      @RequestParam(value = \"sortOrder\", required = false) String sortOrder) {\n" +
+                "\n" +
+                "            SortObject sortObject = SortUtil.generateSortObject(sortField, sortOrder);\n" +
+                "            List<SortObject> sortObjectList = null;\n" +
+                "            if(sortObject != null)\n" +
+                "               sortObjectList = Collections.singletonList(sortObject);\n" +
+                "\n" +
+                "            if(firstIndex == null)\n" +
+                "               firstIndex = 0;\n" +
+                "            if(pageSize == null)\n" +
+                "               pageSize = Integer.MAX_VALUE;\n" +
+                "            AttachmentDto attachment = new AttachmentDto();\n" +
+                "            attachment.setId(id); \n" +
+                "            attachment.setName(name); \n" +
+                "            attachment.setUploadPath(uploadPath); \n" +
+                "            attachment.setDescription(description); \n" +
+                "            attachment.setRelatedEntity(relatedEntity); \n" +
+                "            attachment.setRelatedRecordId(relatedRecordId); \n" +
+                "            attachment.setFileMd5(fileMd5); \n" +
+                "\n" +
+                "            return attachmentService.findPagedByExample(attachment,\n" +
+                "                   sortObjectList,\n" +
+                "                   firstIndex,\n" +
+                "                   pageSize,\n" +
+                "                   StringSearchType.EXPAND_BOTH_SIDES,\n" +
+                "                   null,\n" +
+                "                   null\n" +
+                "                   );\n" +
+                "    }\n" +
+                "\n" +
+                "\n" +
+                "//    @PreAuthorize(\"hasAuthority('AUTHORITY_SAVE_ATTACHMENT')\")\n" +
+                "//    @PostMapping(path = \"/save\")\n" +
+                "//    public AttachmentDto save(@RequestBody AttachmentDto attachment) {\n" +
+                "//        return attachmentService.save(attachment);\n" +
+                "//    }\n" +
+                "\n" +
+                "    @PostMapping(value = \"/upload\", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)\n" +
+                "    public DownloadAttachmentDto upload(@RequestParam(\"file\") MultipartFile file, @RequestParam(\"entity\") String entity) throws IOException, BiffException {\n" +
+                "\n" +
+                "        return attachmentService.uploadFile(file, entity);\n" +
+                "    }\n" +
+                "\n" +
+                "\n" +
+                "    @PreAuthorize(\"hasAuthority('AUTHORITY_REMOVE_ATTACHMENT')\")\n" +
+                "    @DeleteMapping(path = \"/delete/{id}\")\n" +
+                "    public void remove(@PathVariable(name = \"id\")Long id) {\n" +
+                "        attachmentService.remove(id);\n" +
+                "    }\n" +
+                "}");
+
+        String result = content.toString().replaceAll("#package", basePackage);
+
+        System.out.println(result);
+        File file = new File(path);
+        file.mkdirs();
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/AttachmentRestService.java"))) {
+            out.print(result);
+        }
+        return result;
+    }
+
     private static void generateRestService(String basePackage, EntityDefinition entity, String targetPath, boolean generatePermissions) throws FileNotFoundException {
 
         String firstChar = entity.getName().substring(0, 1);
@@ -1438,6 +2166,9 @@ public class AEFGenerator {
                 "\n" +
                 "    //Validation\n" +
                 "    BAD_INPUT(3000),\n" +
+                "    COULD_NOT_STORED_FILE_RETRY(3001),\n" +
+                "    COULD_NOT_CREATE_DIRECTORY(3002),\n" +
+                "    FILE_NOT_FOUND_PATH(3003)," +
                 "    ;\n" +
                 "\n" +
                 "    private int value;\n" +
@@ -1775,6 +2506,47 @@ public class AEFGenerator {
         file.mkdirs();
 
         try (PrintStream out = new PrintStream(new FileOutputStream(path + "/SecurityServiceException.java"))) {
+            out.print(result);
+        }
+        return result;
+
+    }
+
+    private static String generateFileStoragePropertiesFile(String path, String basePackage) throws FileNotFoundException {
+        StringBuilder content = new StringBuilder("");
+        content.append("package #package.common;\n" +
+                "\n" +
+                "import org.springframework.boot.context.properties.ConfigurationProperties;\n" +
+                "\n" +
+                "import java.text.DateFormat;\n" +
+                "import java.text.SimpleDateFormat;\n" +
+                "import java.util.Date;\n" +
+                "\n" +
+                "@ConfigurationProperties(prefix = \"file\")\n" +
+                "public class FileStorageProperties {\n" +
+                "    private String uploadDir;\n" +
+                "\n" +
+                "    public String getUploadDir() {\n" +
+                "\n" +
+                "        Date date = new Date();\n" +
+                "        DateFormat dateFormat = new SimpleDateFormat(\"yyyy-MM-dd\");\n" +
+                "\n" +
+                "        String strDate = dateFormat.format(date);\n" +
+                "        return uploadDir + \"/\" + strDate + \"/\";\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setUploadDir(String uploadDir) {\n" +
+                "        this.uploadDir = uploadDir;\n" +
+                "    }\n" +
+                "}");
+
+        String result = content.toString().replaceAll("#package", basePackage);
+
+        System.out.println(result);
+        File file = new File(path);
+        file.mkdirs();
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/FileStorageProperties.java"))) {
             out.print(result);
         }
         return result;
@@ -2869,7 +3641,8 @@ public class AEFGenerator {
                                                                String dataSourcePassword,
                                                                String contextPath,
                                                                String portNumber,
-                                                               String basePackage) throws FileNotFoundException {
+                                                               String basePackage,
+                                                               String fileUploadPath) throws FileNotFoundException {
         String content = "spring.datasource.url=" + datasourceUrl + "\n" +
                 "spring.datasource.username=" + dataSourceUserName + "\n" +
                 "spring.datasource.password=" + dataSourcePassword + "\n" +
@@ -2882,7 +3655,9 @@ public class AEFGenerator {
                 "server.port=" + portNumber + "\n" +
                 "\n" +
                 "logging.file=target/logs/application.log\n" +
-                "logging.level." + basePackage + "=INFO\n";
+                "logging.level." + basePackage + "=INFO\n" +
+                "\n" +
+                "\nfile.upload-dir=" + fileUploadPath + "\n";
 
         File file = new File(path);
         file.mkdirs();
@@ -2913,6 +3688,9 @@ public class AEFGenerator {
                 "JWT_PARSE_ERROR=اطلاعات دسترسی مخدوش می باشد\n" +
                 "INVALID_LOGIN_TOKEN=دسترسی امکان پذیر نمی باشد. لطفا مجدد وارد شوید.\n" +
                 "ACCESS_DENIED=دسترسی امکان پذیر نمی باشد\n" +
+                "COULD_NOT_STORED_FILE_RETRY=در ذخیره فایل مشکل پیش آمد. لطفا مجددا تلاش کنید\n" +
+                "COULD_NOT_CREATE_DIRECTORY=ذخیره فایل در مسیر تعیین شده امکان پذیر نیست\n" +
+                "FILE_NOT_FOUND_PATH=فایل مورد نظر یافت نشد" +
                 "\n";
         File file = new File(path);
         file.mkdirs();

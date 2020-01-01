@@ -11,6 +11,7 @@ public class BackendConfig implements Serializable {
     private String backendPortNumber;
     private String basePackage;
     private String targetPath;
+    private String fileUploadPath;
     private MavenConfig mavenConfig;
     private SecurityConfig securityConfig;
     private DatabaseConnection databaseConnection;
@@ -78,5 +79,13 @@ public class BackendConfig implements Serializable {
 
     public void setBackendGenerationConfig(BackendGenerationConfig backendGenerationConfig) {
         this.backendGenerationConfig = backendGenerationConfig;
+    }
+
+    public String getFileUploadPath() {
+        return fileUploadPath;
+    }
+
+    public void setFileUploadPath(String fileUploadPath) {
+        this.fileUploadPath = fileUploadPath;
     }
 }

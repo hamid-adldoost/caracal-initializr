@@ -106,12 +106,13 @@ public class FrontGenerator {
 
     public static String generateEntityComponent(List<String> entitiesList, String path, EntityDefinition entity) throws FileNotFoundException {
 
-        StringBuilder content = new StringBuilder("import { Component, OnInit } from '@angular/core';\n" +
+        StringBuilder content = new StringBuilder("import { Component, OnInit, ViewChild } from '@angular/core';\n" +
                 "import {#EntityService} from './#entity.service';\n" +
                 "import {QueryOptions} from '../general/query-options';\n" +
                 "import {MessageService} from 'primeng/api';\n" +
                 "import {CommonService} from '../common.service';\n" +
-                "import * as moment from 'jalali-moment';\n"+
+                "import * as moment from 'jalali-moment';\n" +
+                "import {UploadService} from '../upload.service';\n"+
                 "import {animate, state, style, transition, trigger} from '@angular/animations';\n");
 
         entity.getEntityFieldDefinitionList().forEach(field -> {
@@ -144,6 +145,7 @@ public class FrontGenerator {
                 "\n" +
                 "  constructor(private #LowerCaseService: #EntityService,\n" +
                 "              private messageService: MessageService,\n" +
+                "              private uploadService: UploadService," +
                 "              private commonService: CommonService,\n");
         entity.getEntityFieldDefinitionList().forEach(field -> {
             if (entitiesList.contains(field.getFieldType().getType())) {
@@ -194,6 +196,10 @@ public class FrontGenerator {
                 content.append("  ").append(field.getName()).append("List = [];\n");
             }
         });
+
+        content.append("  uploadedFileIds = [];\n" +
+                "\n" +
+                "  @ViewChild('uploader', {static: false}) fileUpload;");
 
         entity.getEntityFieldDefinitionList().forEach(field -> {
             if (field.getValidationRegex() != null && !field.getValidationRegex().isEmpty()) {
@@ -272,6 +278,17 @@ public class FrontGenerator {
                 "      this.loadItems(null);\n" +
                 "      this.commonService.showSubmitMessage();\n" +
                 "      this.#LowerCase = new Object();\n" +
+                "    });\n" +
+                "  }\n" +
+                "\n" +
+                "  uploadFile(event: any) {\n" +
+                "    this.uploadService.uploadFile(event.files[0], '" + entity.getName() +"').subscribe(res => {\n" +
+                "      console.log('upload res', res);\n" +
+                "      this.uploadedFileIds.push(res.id);\n" +
+                "      this.fileUpload.clear();\n" +
+                "      this.commonService.showUploadMessage();\n" +
+                "    }, error => {\n" +
+                "      this.commonService.showErrorMessage(error);\n" +
                 "    });\n" +
                 "  }\n" +
                 "\n" +
@@ -464,6 +481,20 @@ public class FrontGenerator {
                             "        </div>\n");
             content.append("    </div>\n");
         });
+        content.append("        <div class=\"row\" style=\"direction: rtl\">\n" +
+                "          <div class=\"col-lg-4\">\n" +
+                "\n" +
+                "            بارگذاری فایل پیوست\n" +
+                "          </div>\n" +
+                "          <div class=\"col-lg-4\" style=\"text-align: right;\">\n" +
+                "            <p-fileUpload #uploader name=\"myfile\" [customUpload]=\"true\"\n" +
+                "                          (uploadHandler)=\"uploadFile($event)\"></p-fileUpload>\n" +
+                "          </div>\n" +
+                "          <div class=\"col-lg-4\">\n" +
+                "\n" +
+                "          </div>\n" +
+                "        </div>\n");
+        content.append("\n");
         content.append(
                 "      <div class=\"row\" style=\"margin-top: 30px;\">\n" +
                         "        <div class=\"col-lg-12\">\n" +
