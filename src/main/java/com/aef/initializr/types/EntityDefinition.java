@@ -14,6 +14,7 @@ public class EntityDefinition implements Serializable {
     private List<EntityFieldDefinition> entityFieldDefinitionList;
     private Boolean hasForm;
     private boolean enableValidation;
+    private boolean hasAttachment;
 
     public String getName() {
         return name;
@@ -61,5 +62,13 @@ public class EntityDefinition implements Serializable {
 
     public void setEnableValidation(boolean enableValidation) {
         this.enableValidation = enableValidation;
+    }
+
+    public boolean isHasAttachment() {
+        return hasAttachment;
+    }
+
+    public void setHasAttachment(boolean hasAttachment) {
+        this.hasAttachment = hasAttachment;
     }
 }

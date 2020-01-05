@@ -59,6 +59,7 @@ th{
 
 p-dropdown .ui-dropdown {
   width: 85% !important;
+  margin: 5px;
 }
 
 .ui-message-text {

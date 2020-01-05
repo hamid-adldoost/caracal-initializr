@@ -36,16 +36,16 @@ public class FrontGenerator {
 
     public static void generateFrontProject(String targetPath, String projectName) {
 //        try {
-            System.out.println("Working Directory = " +
-                    System.getProperty("user.dir"));
+        System.out.println("Working Directory = " +
+                System.getProperty("user.dir"));
 //            File file = ResourceUtils.getFile("src/main/resources/aef2ng.zip");
-            File file = new File(
-                    FrontGenerator.class.getClassLoader().getResource("aef2ng.zip").getFile()
-            );
-            String rootPath = targetPath;
-            File filePath = new File(rootPath);
-            filePath.mkdirs();
-            extractZip(file, filePath);
+        File file = new File(
+                FrontGenerator.class.getClassLoader().getResource("aef2ng.zip").getFile()
+        );
+        String rootPath = targetPath;
+        File filePath = new File(rootPath);
+        filePath.mkdirs();
+        extractZip(file, filePath);
 //            replaceText(filePath.getPath(), projectName);
 //        } catch (IOException e) {
 //            e.printStackTrace();
@@ -112,7 +112,9 @@ public class FrontGenerator {
                 "import {MessageService} from 'primeng/api';\n" +
                 "import {CommonService} from '../common.service';\n" +
                 "import * as moment from 'jalali-moment';\n" +
-                "import {UploadService} from '../upload.service';\n"+
+                "import {UploadService} from '../upload.service';\n" +
+                "import {environment} from '../../environments/environment';\n" +
+                "import {saveFile} from '../helpers/file-saver-helper';\n" +
                 "import {animate, state, style, transition, trigger} from '@angular/animations';\n");
 
         entity.getEntityFieldDefinitionList().forEach(field -> {
@@ -161,7 +163,7 @@ public class FrontGenerator {
 
         entity.getEntityFieldDefinitionList().forEach(field -> {
             if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.DROP_DOWN.getValue().toLowerCase())
-                    ||  field.getFieldType().getType().toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
+                    || field.getFieldType().getType().toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
 //                ObjectMapper objectMapper = new ObjectMapper();
 //                String json = field.getFieldType().getOptions();
 //                try {
@@ -179,12 +181,22 @@ public class FrontGenerator {
 
         content.append("  search").append(entity.getName()).append(": {");
         entity.getEntityFieldDefinitionList().forEach(field -> {
-            content.append(field.getName()).append(": any, ");
+            if(field.getFieldType().getType().contains("Date")) {
+                content.append(field.getName() + "From").append(": any, ");
+                content.append(field.getName() + "To").append(": any, ");
+            } else {
+                content.append(field.getName()).append(": any, ");
+            }
         });
         content.setLength(content.length() - 2);
         content.append("} = {");
         entity.getEntityFieldDefinitionList().forEach(field -> {
-            content.append(field.getName()).append(": null, ");
+            if(field.getFieldType().getType().contains("Date")) {
+                content.append(field.getName() + "From").append(": null, ");
+                content.append(field.getName() + "To").append(": null, ");
+            } else {
+                content.append(field.getName()).append(": null, ");
+            }
         });
         content.setLength(content.length() - 1);
         content.append("};\n\n");
@@ -198,8 +210,9 @@ public class FrontGenerator {
         });
 
         content.append("  uploadedFileIds = [];\n" +
+                "  attachmentList = [];\n" +
                 "\n" +
-                "  @ViewChild('uploader', {static: false}) fileUpload;");
+                "  @ViewChild('uploader', {static: false}) fileUpload;\n");
 
         entity.getEntityFieldDefinitionList().forEach(field -> {
             if (field.getValidationRegex() != null && !field.getValidationRegex().isEmpty()) {
@@ -234,7 +247,20 @@ public class FrontGenerator {
                 "    query.options = [{key: 'firstIndex', value: event.first}, {key: 'pageSize', value: event.rows}];\n");
 
         entity.getEntityFieldDefinitionList().forEach(field -> {
-            if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())) {
+            if (field.getFieldType().getType().contains("Date")) {
+                content.append("    if (this.search" + entity.getName() + "." + field.getName() + "From) {\n" +
+                        "      query.options.push({\n" +
+                        "        key: '" + field.getName() + "From',\n" +
+                        "        value: moment.from(this.search" + entity.getName() + "." + field.getName() + "From, 'fa', 'YYYY/MM/DD').format('YYYY/MM/DD')\n" +
+                        "      });\n" +
+                        "    }\n" +
+                        "    if (this.search" + entity.getName() + "." + field.getName() + "To) {\n" +
+                        "      query.options.push({" +
+                        "        key: '" + field.getName() + "To',\n" +
+                        "        value: moment.from(this.search" + entity.getName() + "." + field.getName() + "To, 'fa', 'YYYY/MM/DD').format('YYYY/MM/DD')\n" +
+                        "      });\n" +
+                        "    }\n");
+            } else if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())) {
                 content.append("    if (this.search" + entity.getName() + "." + field.getName() + ") {\n");
                 content.append("        query.options.push({key: '" + field.getName() + "', value: this.search" + entity.getName() + "." + field.getName() + "});\n");
                 content.append("    }\n");
@@ -274,19 +300,27 @@ public class FrontGenerator {
             }
         });
         content.append("    this.#LowerCaseService.create(this.#LowerCase, 'save').subscribe(res => {\n" +
+                "      if (this.uploadedFileIds) {\n" +
+                "        this.uploadService.updateAttachmentRecordId(this.uploadedFileIds, res.id).subscribe(res2 => {\n" +
+                "          console.log('attachments updated successfully');\n" +
+                "          this.clear();\n" +
+                "        });\n" +
+                "      }\n" +
                 "      this.#LowerCase = res;\n" +
                 "      this.loadItems(null);\n" +
                 "      this.commonService.showSubmitMessage();\n" +
                 "      this.#LowerCase = new Object();\n" +
+                "      this.attachmentList = [];\n" +
                 "    });\n" +
                 "  }\n" +
                 "\n" +
                 "  uploadFile(event: any) {\n" +
-                "    this.uploadService.uploadFile(event.files[0], '" + entity.getName() +"').subscribe(res => {\n" +
+                "    this.uploadService.uploadFile(event.files[0], '" + entity.getName() + "').subscribe(res => {\n" +
                 "      console.log('upload res', res);\n" +
                 "      this.uploadedFileIds.push(res.id);\n" +
                 "      this.fileUpload.clear();\n" +
                 "      this.commonService.showUploadMessage();\n" +
+                "      this.findAllAttachments();\n" +
                 "    }, error => {\n" +
                 "      this.commonService.showErrorMessage(error);\n" +
                 "    });\n" +
@@ -296,6 +330,7 @@ public class FrontGenerator {
                 "    this.#LowerCaseService.delete(id, 'delete').subscribe(res => {\n" +
                 "      this.commonService.showDeleteMessage();\n" +
                 "      this.loadItems(null);\n" +
+                "      this.clear();" +
                 "    });\n" +
                 "  }\n" +
                 "\n" +
@@ -310,11 +345,15 @@ public class FrontGenerator {
             }
         });
         content.append("    this.convertDateFields();\n" +
+                "    this.findAllAttachments();\n" +
+                "    this.uploadedFileIds = [];\n" +
                 "  }\n" +
                 "\n" +
                 "\n" +
                 "  clear() {\n" +
                 "    this.#LowerCase = new Object();\n" +
+                "    this.attachmentList = [];\n" +
+                "    this.uploadedFileIds = [];\n" +
                 "  }\n" +
                 "\n" +
                 "   convertDateFields() {\n");
@@ -335,6 +374,36 @@ public class FrontGenerator {
                 "            }\n" +
                 "        });\n" +
                 "    }");
+        content.append("\n" +
+                "\n" +
+                "   confirmDeleteAttachment(id) {\n" +
+                "     this.confirmationService.confirm({\n" +
+                "       message: 'آیا از حدف فایل پیوست مطمئن هستید؟',\n" +
+                "       accept: () => {\n" +
+                "         // Actual logic to perform a confirmation\n" +
+                "         this.deleteAttachment(id);\n" +
+                "       }\n" +
+                "     });\n" +
+                "   }\n" +
+                "\n" +
+                "  findAllAttachments() {\n" +
+                "    this.uploadService.findAllAttachments('#Entity', this.#LowerCase.id).subscribe(res => {\n" +
+                "      this.attachmentList = res.data;\n" +
+                "    });\n" +
+                "  }\n" +
+                "\n" +
+                "  downloadAttachment(attachment: any) {\n" +
+                "    this.uploadService.downloadAttachment(attachment.id).subscribe(res => {\n" +
+                "      saveFile(res.body, attachment.name);\n" +
+                "    });\n" +
+                "  }\n" +
+                "\n" +
+                "  deleteAttachment(id) {\n" +
+                "    this.uploadService.deleteAttachment(id).subscribe(res => {\n" +
+                "      this.commonService.showDeleteMessage();\n" +
+                "      this.findAllAttachments();\n" +
+                "    });\n" +
+                "  }");
 
         content.append(
                 "\n" +
@@ -422,21 +491,21 @@ public class FrontGenerator {
                 "       <form #form=\"ngForm\">\n\n");
         entity.getEntityFieldDefinitionList().forEach(field -> {
 
-            //validate colspan values of fields
-            if (field.getFieldType().getColspan() == null || field.getFieldType().getColspan() < 1) {
-                field.getFieldType().setColspan(2);
-            }
-
-
-            content.append(
-                    "      <div class=\"row\" style=\"direction: rtl\">\n");
-            content.append("        <div class=\"col-lg-4\">\n" +
-                    "\n" +
-                    "       " + field.getFarsiName() + "\n" +
-                    "        </div>\n");
-            content.append("        <div class=\"col-lg-4\" style=\"text-align: right;\">\n");
-
             if ((field.getVisible() == null) || field.getVisible()) {
+                //validate colspan values of fields
+                if (field.getFieldType().getColspan() == null || field.getFieldType().getColspan() < 1) {
+                    field.getFieldType().setColspan(2);
+                }
+
+                content.append(
+                        "      <div class=\"row\" style=\"direction: rtl\">\n");
+                content.append("        <div class=\"col-lg-4\">\n" +
+                        "\n" +
+                        "       " + field.getFarsiName() + "\n" +
+                        "        </div>\n");
+                content.append("        <div class=\"col-lg-4\" style=\"text-align: right;\">\n");
+
+
                 if (field.getFieldType().getType().toLowerCase().contains("Date".toLowerCase())) {
                     content.append("        <dp-date-picker name=\"" + field.getName() + "Calendar\" \n" + "                dir=\"rtl\"\n" + "                [(ngModel)]=\"#LowerCase.").append(field.getName()).append("\"\n").append("                mode=\"day\"\n").append("                placeholder=\"تاریخ\"\n").append("                theme=\"dp-material\">\n").append("          </dp-date-picker>\n");
                 } else if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
@@ -456,7 +525,7 @@ public class FrontGenerator {
                 } else if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())) {
 
                     String type = "text";
-                    if(field.getFieldType().getPassword())
+                    if (field.getFieldType().getPassword())
                         type = "password";
                     content.append("          <input name=\"" + field.getName() + "Input\" pInputText type=\"" + type + "\" [(ngModel)]=\"#LowerCase.").append(field.getName()).append("\"");
 
@@ -473,32 +542,53 @@ public class FrontGenerator {
                     List<String> labelList = systemDefinition.getEntityDefinitionList().stream().filter(e -> e.getName().equals(field.getFieldType().getType())).map(EntityDefinition::getLabel).collect(Collectors.toList());
                     content.append("          <p-dropdown name=\"" + field.getName() + "DropDown\" [options]=\"commonService.preparePureListToDropdownWithNull(").append(field.getName()).append("List)\" [(ngModel)]=\"#LowerCase.").append(field.getName()).append("\" optionLabel=\"").append(labelList.get(0)).append("\" placeholder=\"انتخاب کنید\"  dataKey=\"id\" ></p-dropdown>\n");
                 }
+
+                content.append("        </div>\n");
+                content.append(
+                        "        <div class=\"col-lg-4\">\n" +
+                                "\n" +
+                                "        </div>\n");
+                content.append("    </div>\n");
             }
-            content.append("        </div>\n");
-            content.append(
-                    "        <div class=\"col-lg-4\">\n" +
-                            "\n" +
-                            "        </div>\n");
-            content.append("    </div>\n");
         });
-        content.append("        <div class=\"row\" style=\"direction: rtl\">\n" +
-                "          <div class=\"col-lg-4\">\n" +
-                "\n" +
-                "            بارگذاری فایل پیوست\n" +
-                "          </div>\n" +
-                "          <div class=\"col-lg-4\" style=\"text-align: right;\">\n" +
-                "            <p-fileUpload #uploader name=\"myfile\" [customUpload]=\"true\"\n" +
-                "                          (uploadHandler)=\"uploadFile($event)\"></p-fileUpload>\n" +
-                "          </div>\n" +
-                "          <div class=\"col-lg-4\">\n" +
-                "\n" +
-                "          </div>\n" +
-                "        </div>\n");
-        content.append("\n");
+        if (entity.isHasAttachment()) {
+            content.append("        <div class=\"row\" style=\"direction: rtl\">\n" +
+                    "          <div class=\"col-lg-4\">\n" +
+                    "\n" +
+                    "            بارگذاری فایل پیوست\n" +
+                    "          </div>\n" +
+                    "          <div class=\"col-lg-4\" style=\"text-align: right;\">\n" +
+                    "            <p-fileUpload #uploader name=\"myfile\" [customUpload]=\"true\"\n" +
+                    "                          (uploadHandler)=\"uploadFile($event)\"></p-fileUpload>\n" +
+                    "          </div>\n" +
+                    "          <div class=\"col-lg-4\">\n" +
+                    "\n" +
+                    "          </div>\n" +
+                    "        </div>\n");
+            content.append("\n");
+            content.append("\n" +
+                    "        <div class=\"row\" style=\"direction: rtl\">\n" +
+                    "          <div class=\"col-lg-12\">\n" +
+                    "            تعداد فایل های در انتظار ذخیره نهایی :\n" +
+                    "            {{uploadedFileIds.length}}\n" +
+                    "            <br />" +
+                    "\n" +
+                    "            پیوست ها :\n" +
+                    "            <span style=\"margin-left: 20px; margin-right: 20px;\" *ngFor=\"let i of attachmentList\">\n" +
+                    "              <div>\n" +
+                    "                <button class=\"btn btn-info\" (click)=\"downloadAttachment(i)\"><span\n" +
+                    "                  class=\"pi pi-download\"></span>{{i.name}}</button>\n" +
+                    "                <button class=\"btn btn-danger\" (click)=\"confirmDeleteAttachment(i.id)\"><span\n" +
+                    "                  class=\"pi pi-trash\">حذف</span></button>\n" +
+                    "                </div>\n" +
+                    "            </span>\n" +
+                    "          </div>\n" +
+                    "        </div>");
+        }
         content.append(
                 "      <div class=\"row\" style=\"margin-top: 30px;\">\n" +
                         "        <div class=\"col-lg-12\">\n" +
-                        "          <button type=\"button\" *ngIf=\"this.#LowerCase.id\" (click)=\"clear()\" class=\"btn btn-info\">جدید</button>\n" +
+                        "          <button type=\"button\" *ngIf=\"this.#LowerCase.id || this.uploadedFileIds.length\" (click)=\"clear()\" class=\"btn btn-info\">جدید</button>\n" +
                         "          <button type=\"button\" *ngIf=\"this.#LowerCase.id\" (click)=\"confirm(#LowerCase)\" class=\"btn btn-danger\">حذف</button>\n" +
                         "          <button type=\"button\" (click)=\"save()\" class=\"btn btn-info\">ذخیره</button>\n" +
                         "        </div>\n" +
@@ -521,7 +611,13 @@ public class FrontGenerator {
         content.append("            <tr>\n" +
                 "              <th style=\"overflow: hidden;\" colspan=\"1\"><button pButton class=\"btn btn-primary\" (click)=\"loadItems($event)\" icon=\"pi pi-search\"></button></th>\n");
         entity.getEntityFieldDefinitionList().forEach(field -> {
-            if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())) {
+            if (field.getFieldType().getType().contains("Date")) {
+                content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\">\n" +
+                        "                <input name=\"" + field.getName() + "FromFilterInput\" pInputText [(ngModel)]=\"search" + entity.getName() + "." + field.getName() + "From\">\n" +
+                        "                تا\n" +
+                        "                <input name=\"" + field.getName() + "ToFilterInput\" pInputText [(ngModel)]=\"search" + entity.getName() + "." + field.getName() + "To\">\n" +
+                        "              </th>");
+            } else if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())) {
                 content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\"><input name=\"" + field.getName() + "FilterInput\" pInputText [(ngModel)]=\"search" + entity.getName() + "." + field.getName() + "\"></th>\n");
             } else if (field.getFieldType().getType().contains(ComponentTypes.DROP_DOWN.getValue())
                     || field.getFieldType().getType().contains(ComponentTypes.RADIO_BUTTON.getValue())) {
