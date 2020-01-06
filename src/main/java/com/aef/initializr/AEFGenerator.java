@@ -1301,6 +1301,9 @@ public class AEFGenerator {
                 "\n" +
                 "    public Resource loadFileAsResource(String relativePath) {\n" +
                 "        try {\n" +
+                "            if(!(uploadBaseUrl.endsWith(\"/\") || uploadBaseUrl.endsWith(\"\\\\\"))) {\n" +
+                "                uploadBaseUrl += \"/\";\n" +
+                "            }\n" +
                 "            Path filePath = Paths.get(uploadBaseUrl + relativePath);\n" +
                 "            Resource resource = new UrlResource(filePath.toUri());\n" +
                 "            if(resource.exists()) {\n" +
