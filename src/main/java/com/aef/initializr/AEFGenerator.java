@@ -1383,11 +1383,12 @@ public class AEFGenerator {
                 "    }\n" +
                 "\n" +
                 "    @Transactional\n" +
-                "    public DownloadAttachmentDto uploadFile(MultipartFile file, String entity) throws IOException {\n" +
+                "    public DownloadAttachmentDto uploadFile(MultipartFile file, String entity, String description) throws IOException {\n" +
                 "        String path = fileStorageService.storeFile(file);\n" +
                 "        File savedFile = fileStorageService.loadFileAsFile(path);\n" +
                 "        Attachment attachment = new Attachment();\n" +
                 "        attachment.setName(file.getOriginalFilename());\n" +
+                "        attachment.setDescription(description);\n" +
                 "        HashCode hashCode = Files.hash(savedFile, Hashing.md5());\n" +
                 "        attachment.setFileMd5(hashCode.toString());\n" +
                 "        attachment.setRelatedEntity(entity);\n" +
@@ -1507,6 +1508,7 @@ public class AEFGenerator {
                 "    private Long id;\n" +
                 "    private String downloadPath;\n" +
                 "    private String fileName;\n" +
+                "    private String description;\n" +
                 "\n" +
                 "    public Long getId() {\n" +
                 "        return id;\n" +
@@ -1531,6 +1533,14 @@ public class AEFGenerator {
                 "    public void setFileName(String fileName) {\n" +
                 "        this.fileName = fileName;\n" +
                 "    }\n" +
+                "\n" +
+                "    public String getDescription() {\n" +
+                "        return description;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setDescription(String description) {\n" +
+                "        this.description = description;\n" +
+                "    }" +
                 "}\n");
 
         String result = content.toString().replaceAll("#package", basePackage);
@@ -1982,9 +1992,10 @@ public class AEFGenerator {
                 "//    }\n" +
                 "\n" +
                 "    @PostMapping(value = \"/upload\", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)\n" +
-                "    public DownloadAttachmentDto upload(@RequestParam(\"file\") MultipartFile file, @RequestParam(\"entity\") String entity) throws IOException, BiffException {\n" +
+                "    public DownloadAttachmentDto upload(@RequestParam(\"file\") MultipartFile file, @RequestParam(\"entity\") String entity,\n" +
+                "                                        @RequestParam(value = \"description\", required = false)String description) throws IOException, BiffException {\n" +
                 "\n" +
-                "        return attachmentService.uploadFile(file, entity);\n" +
+                "        return attachmentService.uploadFile(file, entity, description);\n" +
                 "    }\n" +
                 "\n" +
                 "\n" +

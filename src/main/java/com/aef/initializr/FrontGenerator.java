@@ -210,6 +210,7 @@ public class FrontGenerator {
         });
 
         content.append("  uploadedFileIds = [];\n" +
+                "  uploadFileDesc = '';\n" +
                 "  attachmentList = [];\n" +
                 "  sortField: any;\n" +
                 "\n" +
@@ -326,11 +327,12 @@ public class FrontGenerator {
                 "  }\n" +
                 "\n" +
                 "  uploadFile(event: any) {\n" +
-                "    this.uploadService.uploadFile(event.files[0], '" + entity.getName() + "').subscribe(res => {\n" +
+                "    this.uploadService.uploadFile(event.files[0], '" + entity.getName() + "', this.uploadFileDesc).subscribe(res => {\n" +
                 "      console.log('upload res', res);\n" +
                 "      this.uploadedFileIds.push(res.id);\n" +
                 "      this.fileUpload.clear();\n" +
                 "      this.commonService.showUploadMessage();\n" +
+                "      this.uploadFileDesc = ''\n" +
                 "      this.findAllAttachments();\n" +
                 "    }, error => {\n" +
                 "      this.commonService.showErrorMessage(error);\n" +
@@ -365,6 +367,7 @@ public class FrontGenerator {
                 "    this.#LowerCase = new Object();\n" +
                 "    this.attachmentList = [];\n" +
                 "    this.uploadedFileIds = [];\n" +
+                "    this.uploadFileDesc = ''" +
                 "  }\n" +
                 "\n" +
                 "   convertDateFields() {\n");
@@ -570,7 +573,15 @@ public class FrontGenerator {
                     "          </div>\n" +
                     "          <div class=\"col-lg-4\" style=\"text-align: right;\">\n" +
                     "            <p-fileUpload #uploader name=\"myfile\" [customUpload]=\"true\"\n" +
-                    "                          (uploadHandler)=\"uploadFile($event)\"></p-fileUpload>\n" +
+                    "                          (uploadHandler)=\"uploadFile($event)\">\n" +
+                    "               <ng-template pTemplate=\"toolbar\">\n" +
+                    "\n" +
+                    "                <div>\n" +
+                    "                  شرح پیوست :\n" +
+                    "                  <input name=\"fileDescInput\" type=\"text\" [(ngModel)]=\"uploadFileDesc\"/>\n" +
+                    "                </div>\n" +
+                    "              </ng-template>\n" +
+                    "           </p-fileUpload>\n" +
                     "          </div>\n" +
                     "          <div class=\"col-lg-4\">\n" +
                     "\n" +
@@ -585,13 +596,19 @@ public class FrontGenerator {
                     "            <br />" +
                     "\n" +
                     "            پیوست ها :\n" +
+                    "<br />\n" +
                     "            <span style=\"margin-left: 20px; margin-right: 20px;\" *ngFor=\"let i of attachmentList\">\n" +
                     "              <div>\n" +
+                    "                شرح پیوست :\n" +
+                    "                {{i.description}}\n" +
+                    "                <br/>\n" +
                     "                <button class=\"btn btn-info\" (click)=\"downloadAttachment(i)\"><span\n" +
-                    "                  class=\"pi pi-download\"></span>{{i.name}}</button>\n" +
+                    "                  class=\"pi pi-download\"></span>{{i.name}}</button>:\n" +
+                    "\n" +
                     "                <button class=\"btn btn-danger\" (click)=\"confirmDeleteAttachment(i.id)\"><span\n" +
                     "                  class=\"pi pi-trash\">حذف</span></button>\n" +
                     "                </div>\n" +
+                    "              <hr/>\n" +
                     "            </span>\n" +
                     "          </div>\n" +
                     "        </div>");
