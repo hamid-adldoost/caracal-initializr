@@ -109,7 +109,7 @@ public class FrontGenerator {
         StringBuilder content = new StringBuilder("import { Component, OnInit, ViewChild } from '@angular/core';\n" +
                 "import {#EntityService} from './#entity.service';\n" +
                 "import {QueryOptions} from '../general/query-options';\n" +
-                "import {MessageService} from 'primeng/api';\n" +
+                "import {MessageService, SortEvent} from 'primeng/api';\n" +
                 "import {CommonService} from '../common.service';\n" +
                 "import * as moment from 'jalali-moment';\n" +
                 "import {UploadService} from '../upload.service';\n" +
@@ -181,7 +181,7 @@ public class FrontGenerator {
 
         content.append("  search").append(entity.getName()).append(": {");
         entity.getEntityFieldDefinitionList().forEach(field -> {
-            if(field.getFieldType().getType().contains("Date")) {
+            if (field.getFieldType().getType().contains("Date")) {
                 content.append(field.getName() + "From").append(": any, ");
                 content.append(field.getName() + "To").append(": any, ");
             } else {
@@ -191,7 +191,7 @@ public class FrontGenerator {
         content.setLength(content.length() - 2);
         content.append("} = {");
         entity.getEntityFieldDefinitionList().forEach(field -> {
-            if(field.getFieldType().getType().contains("Date")) {
+            if (field.getFieldType().getType().contains("Date")) {
                 content.append(field.getName() + "From").append(": null, ");
                 content.append(field.getName() + "To").append(": null, ");
             } else {
@@ -211,6 +211,7 @@ public class FrontGenerator {
 
         content.append("  uploadedFileIds = [];\n" +
                 "  attachmentList = [];\n" +
+                "  sortField: any;\n" +
                 "\n" +
                 "  @ViewChild('uploader', {static: false}) fileUpload;\n");
 
@@ -227,11 +228,12 @@ public class FrontGenerator {
                 content.append("    this." + field.getName() + "options = this.commonService.preparePureListToDropdown(this." + field.getName() + "options);\n");
             }
         });
-        content.append("    this.#LowerCase =  new Object();\n" +
-                "    this.#LowerCaseService.list(new QueryOptions(), 'search').subscribe(res => {\n" +
-                "      console.log('list call res', res);\n" +
-                "      this.items = res;\n");
-        content.append("    });\n");
+        content.append("    this.#LowerCase =  new Object();\n");
+//        content.append(
+//                "    this.#LowerCaseService.list(new QueryOptions(), 'search').subscribe(res => {\n" +
+//                "      console.log('list call res', res);\n" +
+//                "      this.items = res;\n");
+//        content.append("    });\n");
         entity.getEntityFieldDefinitionList().forEach(field -> {
             if (entitiesList.contains(field.getFieldType().getType())) {
                 content.append("        this.fetch" + field.getFieldType().getType() + "List();\n");
@@ -239,8 +241,13 @@ public class FrontGenerator {
         });
         content.append("  }\n\n");
 
+//        content.append("  manageSortFields(event: SortEvent) {\n" +
+//                "    console.log('sort event', event);\n" +
+//                "    this.sortField = {sortField: event.field, sortOrder: this.commonService.convertSortOrder(event.order)};\n" +
+//                "  }\n");
+
         content.append("  loadItems(event: any) {\n" +
-                "    if (!event || !event.first) {\n" +
+                "    if (!event) {\n" +
                 "      event = {first : 0, rows : 20};\n" +
                 "    }\n" +
                 "    let query = new QueryOptions();\n" +
@@ -271,7 +278,11 @@ public class FrontGenerator {
                 content.append("    }\n");
             }
         });
-
+        content.append("    if(event.sortField) {\n" +
+                "      this.sortField = {sortField: event.sortField, sortOrder: this.commonService.convertSortOrder(event.sortOrder)};\n" +
+                "      query.options.push({key: 'sortField', value: this.sortField.sortField});\n" +
+                "      query.options.push({key: 'sortOrder', value: this.sortField.sortOrder});\n" +
+                "    }\n");
 
         content.append("\n    this.#LowerCaseService.list(query, 'search').subscribe(res => {\n" +
                 "      this.items = res;\n" +
@@ -595,13 +606,23 @@ public class FrontGenerator {
                         "      </div>\n" +
                         "\n" +
                         "      <div class=\"row tableWrapper\" *ngIf=\"items\" style=\"margin-top: 5px;\">\n" +
-                        "        <p-table [value]=\"items.data\" [responsive]=\"true\" [paginator]=\"true\" (onLazyLoad)=\"loadItems($event)\"\n" +
+                        "        <p-table [value]=\"items.data\" [responsive]=\"true\" [paginator]=\"true\" [lazy]=\"true\" (onLazyLoad)=\"loadItems($event)\"\n" +
                         "                 [rows]=\"20\" [totalRecords]=\"items.count\" emptymessage=\"درخواستی یافت نشد\" [style]=\"{minWidth:'100%', width:'" + entity.getEntityFieldDefinitionList().size() * 100 + "px'}\">\n" +
                         "          <ng-template pTemplate=\"header\">\n" +
                         "            <tr>\n");
         content.append("              <th colspan=\"1\">#</th>\n");
         entity.getEntityFieldDefinitionList().forEach(field -> {
-            content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\">").append(field.getFarsiName()).append("</th>\n");
+            if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())
+                    || field.getFieldType().getType().contains(ComponentTypes.DROP_DOWN.getValue())
+                    || field.getFieldType().getType().contains(ComponentTypes.RADIO_BUTTON.getValue())
+            ) {
+                content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\" pSortableColumn=\"" + field.getName() + "\">\n")
+                        .append(field.getFarsiName());
+                content.append("\n").append("               <p-sortIcon field=\"").append(field.getName()).append("\"></p-sortIcon>");
+                content.append("\n              </th>\n");
+            } else {
+                content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\">").append(field.getFarsiName()).append("</th>\n");
+            }
         });
 
         content.append("              <th colspan=\"2\">ویرایش</th>\n");
@@ -609,7 +630,7 @@ public class FrontGenerator {
         content.append("            </tr>\n");
 
         content.append("            <tr>\n" +
-                "              <th style=\"overflow: hidden;\" colspan=\"1\"><button pButton class=\"btn btn-primary\" (click)=\"loadItems($event)\" icon=\"pi pi-search\"></button></th>\n");
+                "              <th style=\"overflow: hidden;\" colspan=\"1\"><button pButton class=\"btn btn-primary\" (click)=\"loadItems(null)\" icon=\"pi pi-search\"></button></th>\n");
         entity.getEntityFieldDefinitionList().forEach(field -> {
             if (field.getFieldType().getType().contains("Date")) {
                 content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\">\n" +
