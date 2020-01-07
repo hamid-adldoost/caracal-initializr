@@ -114,6 +114,7 @@ public class AEFGenerator {
 
         if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateErrorCodeFile()) {
             generateErrorCodeProperties(resourcePath.getPath());
+            generateFarsiCodesProperties(resourcePath.getPath(), systemDefinition.getEntityDefinitionList());
         }
 
         if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateSecurityConfigClass()) {
@@ -133,12 +134,13 @@ public class AEFGenerator {
             generateConfigReaderUtilClass(commonPath.getPath(), basePackage);
             generateAEFExceptionHandler(commonPath.getPath(), basePackage);
             generateFarsiCodeReaderUtility(commonPath.getPath(), basePackage);
-            generateFarsiCodeReaderUtility(commonPath.getPath(), basePackage);
             generateErrorCodeReaderUtilClass(commonPath.getPath(), basePackage);
             generateRandomStringCodeUtility(commonPath.getPath(), basePackage);
             generateRestErrorMessageClass(commonPath.getPath(), basePackage);
             generateSecurityServiceExceptionClass(commonPath.getPath(), basePackage);
             generateFileStoragePropertiesFile(commonPath.getPath(), basePackage);
+            generateValidationExceptionFile(commonPath.getPath(), basePackage);
+            generateValidationTypeEnum(commonPath.getPath(), basePackage);
         }
 
         //fill jwt package
@@ -180,7 +182,7 @@ public class AEFGenerator {
                 if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateService()) {
                     generateAttachmentService(basePackage, servicePath.getPath());
                     generateFileStorageService(basePackage, servicePath.getPath());
-                    generateService(basePackage, entity.getName(), servicePath.getPath());
+                    generateService(basePackage, entity, servicePath.getPath());
                 }
                 if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateGeneralService()) {
                     //fill service package
@@ -1425,9 +1427,8 @@ public class AEFGenerator {
 
     }
 
-    private static void generateService(String basePackage, String entityName, String targetPath) throws FileNotFoundException {
-        String content =
-
+    private static void generateService(String basePackage, EntityDefinition entity, String targetPath) throws FileNotFoundException {
+        StringBuilder content = new StringBuilder(
                 "package #package.service;\n" +
                         "\n" +
                         "import com.aef3.data.api.GenericEntityDAO;\n" +
@@ -1436,6 +1437,9 @@ public class AEFGenerator {
                         "import #package.model.#Entity;\n" +
                         "import org.springframework.beans.factory.annotation.Autowired;\n" +
                         "import org.springframework.stereotype.Service;\n" +
+                        "import #package.common.ValidationType;\n" +
+                        "import #package.common.BusinessExceptionCode;\n" +
+                        "import #package.common.ValidationException;\n" +
                         "\n" +
                         "@Service\n" +
                         "public class #EntityService extends GeneralServiceImpl<#EntityDto, #Entity, Long> {\n" +
@@ -1457,18 +1461,29 @@ public class AEFGenerator {
                         "    public #EntityDto getDtoInstance() {\n" +
                         "        return new #EntityDto();\n" +
                         "    }\n" +
-                        "}\n";
+                        "    public void validateBeforeSave(#EntityDto " + entity.getName().toLowerCase() + "Dto) {\n");
+                        entity.getEntityFieldDefinitionList().forEach(field -> {
+                            if(field.getNullable() == false) {
+                                String firstCharFieldName = field.getName().substring(0, 1);
+                                String upperCaseCharFieldName = field.getName().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
+                                content.append("        if(" + entity.getName().toLowerCase() + "Dto.get" + upperCaseCharFieldName + "() == null) {\n" +
+                                        "            throw new ValidationException(BusinessExceptionCode.IS_MANDETORY.name(), \"" + field.getName() + "\", \"" + entity.getName() + "\", ValidationType.IS_MANDATORY);\n" +
+                                        "        }\n");
+                            }
+                        });
+                        content.append("    }\n");
+                        content.append("}");
 
-        String firstChar = entityName.substring(0, 1);
-        String entityInstanceName = entityName.replaceFirst(firstChar, firstChar.toLowerCase());
+        String firstChar = entity.getName().substring(0, 1);
+        String entityInstanceName = entity.getName().replaceFirst(firstChar, firstChar.toLowerCase());
 
-        String result = content.replaceAll("#package", basePackage)
-                .replaceAll("#Entity", entityName)
+        String result = content.toString().replaceAll("#package", basePackage)
+                .replaceAll("#Entity", entity.getName())
                 .replaceAll("#entity", entityInstanceName);
 
         System.out.printf(result);
 
-        try (PrintStream out = new PrintStream(new FileOutputStream(targetPath + "/" + entityName + "Service.java"))) {
+        try (PrintStream out = new PrintStream(new FileOutputStream(targetPath + "/" + entity.getName() + "Service.java"))) {
             out.print(result);
         }
 
@@ -2235,6 +2250,7 @@ public class AEFGenerator {
         }
         content.append("    @PostMapping(path = \"/save\")\n" +
                 "    public #EntityDto save(@RequestBody #EntityDto #entity) {\n" +
+                "        #entityService.validateBeforeSave(#entity);" +
                 "        return #entityService.save(#entity);\n" +
                 "    }\n" +
                 "\n");
@@ -2274,8 +2290,10 @@ public class AEFGenerator {
                 "    BAD_INPUT(3000),\n" +
                 "    COULD_NOT_STORED_FILE_RETRY(3001),\n" +
                 "    COULD_NOT_CREATE_DIRECTORY(3002),\n" +
-                "    FILE_NOT_FOUND_PATH(3003)," +
-                "    ;\n" +
+                "    FILE_NOT_FOUND_PATH(3003),\n" +
+                "    IS_MANDETORY(3004),\n" +
+                "\n" +
+                "    ;" +
                 "\n" +
                 "    private int value;\n" +
                 "\n" +
@@ -2425,6 +2443,27 @@ public class AEFGenerator {
                 "            return new ResponseEntity<>(new RestErrorMessage(errorMessage, code), HttpStatus.UNAUTHORIZED);\n" +
                 "        }\n" +
                 "\n" +
+                "        if(ex instanceof ValidationException) {\n" +
+                "            String entityName = ((ValidationException) ex).getEntityName();\n" +
+                "            String fieldName = ((ValidationException) ex).getFieldName();\n" +
+                "            ValidationType validationType = ((ValidationException) ex).getValidationType();\n" +
+                "            if(entityName == null)\n" +
+                "                entityName = \"\";\n" +
+                "            if(fieldName == null)\n" +
+                "                fieldName = \"\";\n" +
+                "            try {\n" +
+                "                errorMessage = FarsiCodeReaderUtility.getResourceProperity(entityName + \".\" + fieldName) + \" \";\n" +
+                "                errorMessage += ErrorCodeReaderUtil.getResourceProperity(validationType.name());\n" +
+                "                code = BusinessExceptionCode.NOT_VALID_DATA.getValue();\n" +
+                "                return new ResponseEntity<>(new RestErrorMessage(errorMessage, code), HttpStatus.BAD_REQUEST);\n" +
+                "            } catch (Exception e) {\n" +
+                "                errorMessage = ErrorCodeReaderUtil.getResourceProperity(BusinessExceptionCode.BAD_INPUT.name());\n" +
+                "                code = BusinessExceptionCode.NOT_VALID_DATA.getValue();\n" +
+                "                return new ResponseEntity<>(new RestErrorMessage(errorMessage, code), HttpStatus.BAD_REQUEST);\n" +
+                "            }\n" +
+                "\n" +
+                "        }\n" +
+                "\n" +
                 "        try {\n" +
                 "            errorMessage = ErrorCodeReaderUtil.getResourceProperity(ex.getMessage());\n" +
                 "            BusinessExceptionCode bec = BusinessExceptionCode.findByName(ex.getMessage());\n" +
@@ -2465,6 +2504,8 @@ public class AEFGenerator {
         //fixme : utf8 reading...
         String content = "package #package.common;\n" +
                 "\n" +
+                "import java.io.UnsupportedEncodingException;\n" +
+                "import java.nio.charset.StandardCharsets;\n" +
                 "import java.util.Enumeration;\n" +
                 "import java.util.ResourceBundle;\n" +
                 "\n" +
@@ -2472,15 +2513,17 @@ public class AEFGenerator {
                 "\n" +
                 "    static ResourceBundle rb = ResourceBundle.getBundle(\"farsicodes\");\n" +
                 "\n" +
-                "    public static String getResourceProperity(String key) {\n" +
-                "        return rb.getString(key);\n" +
+                "    public static String getResourceProperity(String key)  {\n" +
+                "        String val = rb.getString(key);\n" +
+                "        val = new String(val.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);\n" +
+                "        return val;\n" +
                 "    }\n" +
                 "\n" +
-                "    public static Enumeration<String> getResourceKeys() {\n" +
+                "    public static Enumeration<String> getResourceKeys(String key) {\n" +
                 "        return rb.getKeys();\n" +
                 "    }\n" +
                 "\n" +
-                "}";
+                "}\n";
         String result = content.replaceAll("#package", basePackage);
 
         System.out.printf(result);
@@ -2657,6 +2700,113 @@ public class AEFGenerator {
         }
         return result;
 
+    }
+
+    private static String generateValidationExceptionFile(String path, String basePackage) throws FileNotFoundException {
+        String content = "package #package.common;\n" +
+                "\n" +
+                "import #package.common.ValidationType;\n" +
+                "public class ValidationException extends RuntimeException {\n" +
+                "\n" +
+                "    private String fieldName;\n" +
+                "    private String entityName;\n" +
+                "    private ValidationType validationType;\n" +
+                "\n" +
+                "    public ValidationException(String fieldName, String entityName, ValidationType validationType) {\n" +
+                "        this.fieldName = fieldName;\n" +
+                "        this.entityName = entityName;\n" +
+                "        this.validationType = validationType;\n" +
+                "    }\n" +
+                "\n" +
+                "    public ValidationException(String message, String fieldName, String entityName, ValidationType validationType) {\n" +
+                "        super(message);\n" +
+                "        this.fieldName = fieldName;\n" +
+                "        this.entityName = entityName;\n" +
+                "        this.validationType = validationType;\n" +
+                "    }\n" +
+                "\n" +
+                "    public ValidationException(String message, Throwable cause, String fieldName, String entityName, ValidationType validationType) {\n" +
+                "        super(message, cause);\n" +
+                "        this.fieldName = fieldName;\n" +
+                "        this.entityName = entityName;\n" +
+                "        this.validationType = validationType;\n" +
+                "    }\n" +
+                "\n" +
+                "    public ValidationException(Throwable cause, String fieldName, String entityName, ValidationType validationType) {\n" +
+                "        super(cause);\n" +
+                "        this.fieldName = fieldName;\n" +
+                "        this.entityName = entityName;\n" +
+                "        this.validationType = validationType;\n" +
+                "    }\n" +
+                "\n" +
+                "    public ValidationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace, String fieldName, String entityName, ValidationType validationType) {\n" +
+                "        super(message, cause, enableSuppression, writableStackTrace);\n" +
+                "        this.fieldName = fieldName;\n" +
+                "        this.entityName = entityName;\n" +
+                "        this.validationType = validationType;\n" +
+                "    }\n" +
+                "\n" +
+                "    public ValidationType getValidationType() {\n" +
+                "        return validationType;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setValidationType(ValidationType validationType) {\n" +
+                "        this.validationType = validationType;\n" +
+                "    }\n" +
+                "\n" +
+                "    public String getEntityName() {\n" +
+                "        return entityName;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setEntityName(String entityName) {\n" +
+                "        this.entityName = entityName;\n" +
+                "    }\n" +
+                "\n" +
+                "    public String getFieldName() {\n" +
+                "        return fieldName;\n" +
+                "    }\n" +
+                "\n" +
+                "    public void setFieldName(String fieldName) {\n" +
+                "        this.fieldName = fieldName;\n" +
+                "    }\n" +
+                "}\n";
+        String result = content.toString().replaceAll("#package", basePackage);
+
+        System.out.println(result);
+        File file = new File(path);
+        file.mkdirs();
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/ValidationException.java"))) {
+            out.print(result);
+        }
+        return result;
+    }
+
+    private static String generateValidationTypeEnum(String path, String basePackage) throws FileNotFoundException {
+        String content = "package #package.common;\n" +
+                "\n" +
+                "public enum ValidationType {\n" +
+                "\n" +
+                "    IS_MANDATORY,\n" +
+                "    NOT_VALID,\n" +
+                "    IS_UNIQUE,\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "    ;\n" +
+                "}\n";
+
+        String result = content.toString().replaceAll("#package", basePackage);
+
+        System.out.println(result);
+        File file = new File(path);
+        file.mkdirs();
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/ValidationType.java"))) {
+            out.print(result);
+        }
+        return result;
     }
 
     private static String generateCustomClaims(String path, String basePackage) throws FileNotFoundException {
@@ -3796,7 +3946,11 @@ public class AEFGenerator {
                 "ACCESS_DENIED=دسترسی امکان پذیر نمی باشد\n" +
                 "COULD_NOT_STORED_FILE_RETRY=در ذخیره فایل مشکل پیش آمد. لطفا مجددا تلاش کنید\n" +
                 "COULD_NOT_CREATE_DIRECTORY=ذخیره فایل در مسیر تعیین شده امکان پذیر نیست\n" +
-                "FILE_NOT_FOUND_PATH=فایل مورد نظر یافت نشد" +
+                "FILE_NOT_FOUND_PATH=فایل مورد نظر یافت نشد\n" +
+                "BAD_INPUT=اطلاعات وارد شده صحیح نیست\n" +
+                "IS_MANDATORY=الزامی است\n" +
+                "NOT_VALID=قابل قبول نیست\n" +
+                "IS_UNIQUE=تکراری است\n" +
                 "\n";
         File file = new File(path);
         file.mkdirs();
@@ -3805,6 +3959,23 @@ public class AEFGenerator {
             out.write(content);
         }
         return content;
+    }
+
+    public static String generateFarsiCodesProperties(String path, List<EntityDefinition> entityDefinitionList) throws IOException {
+        StringBuilder content = new StringBuilder("");
+        entityDefinitionList.forEach(e -> {
+            e.getEntityFieldDefinitionList().forEach(f -> {
+                content.append(e.getName()).append(".").append(f.getName()).append("=").append(f.getFarsiName()).append("\n");
+            });
+        });
+        File file = new File(path);
+        file.mkdirs();
+
+        try (OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(path + "/farsicodes.properties"), StandardCharsets.UTF_8)) {
+            out.write(content.toString());
+        }
+
+        return content.toString();
     }
 
     public static String camelToSnake(String phrase) {

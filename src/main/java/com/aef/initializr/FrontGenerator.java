@@ -515,8 +515,12 @@ public class FrontGenerator {
                         "      <div class=\"row\" style=\"direction: rtl\">\n");
                 content.append("        <div class=\"col-lg-4\">\n" +
                         "\n" +
-                        "       " + field.getFarsiName() + "\n" +
-                        "        </div>\n");
+                        "       " + field.getFarsiName() + "\n");
+                if (!field.getNullable()) {
+                    content.append("<span style=\"color: red\">*</span>\n");
+                }
+                content.append("        </div>\n");
+
                 content.append("        <div class=\"col-lg-4\" style=\"text-align: right;\">\n");
 
 
@@ -624,23 +628,29 @@ public class FrontGenerator {
                         "\n" +
                         "      <div class=\"row tableWrapper\" *ngIf=\"items\" style=\"margin-top: 5px;\">\n" +
                         "        <p-table [value]=\"items.data\" [responsive]=\"true\" [paginator]=\"true\" [lazy]=\"true\" (onLazyLoad)=\"loadItems($event)\"\n" +
-                        "                 [rows]=\"20\" [totalRecords]=\"items.count\" emptymessage=\"درخواستی یافت نشد\" [style]=\"{minWidth:'100%', width:'" + entity.getEntityFieldDefinitionList().size() * 100 + "px'}\">\n" +
+                        "                 [rows]=\"20\" [totalRecords]=\"items.count\" emptymessage=\"درخواستی یافت نشد\" [style]=\"{minWidth:'100%', width:'" + entity.getEntityFieldDefinitionList().
+
+                        size() * 100 + "px'}\">\n" +
                         "          <ng-template pTemplate=\"header\">\n" +
                         "            <tr>\n");
         content.append("              <th colspan=\"1\">#</th>\n");
-        entity.getEntityFieldDefinitionList().forEach(field -> {
-            if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())
-                    || field.getFieldType().getType().contains(ComponentTypes.DROP_DOWN.getValue())
-                    || field.getFieldType().getType().contains(ComponentTypes.RADIO_BUTTON.getValue())
-            ) {
-                content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\" pSortableColumn=\"" + field.getName() + "\">\n")
-                        .append(field.getFarsiName());
-                content.append("\n").append("               <p-sortIcon field=\"").append(field.getName()).append("\"></p-sortIcon>");
-                content.append("\n              </th>\n");
-            } else {
-                content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\">").append(field.getFarsiName()).append("</th>\n");
-            }
-        });
+        entity.getEntityFieldDefinitionList().
+
+                forEach(field ->
+
+                {
+                    if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())
+                            || field.getFieldType().getType().contains(ComponentTypes.DROP_DOWN.getValue())
+                            || field.getFieldType().getType().contains(ComponentTypes.RADIO_BUTTON.getValue())
+                    ) {
+                        content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\" pSortableColumn=\"" + field.getName() + "\">\n")
+                                .append(field.getFarsiName());
+                        content.append("\n").append("               <p-sortIcon field=\"").append(field.getName()).append("\"></p-sortIcon>");
+                        content.append("\n              </th>\n");
+                    } else {
+                        content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\">").append(field.getFarsiName()).append("</th>\n");
+                    }
+                });
 
         content.append("              <th colspan=\"2\">ویرایش</th>\n");
         content.append("              <th colspan=\"2\">حذف</th>\n");
@@ -648,25 +658,29 @@ public class FrontGenerator {
 
         content.append("            <tr>\n" +
                 "              <th style=\"overflow: hidden;\" colspan=\"1\"><button pButton class=\"btn btn-primary\" (click)=\"loadItems(null)\" icon=\"pi pi-search\"></button></th>\n");
-        entity.getEntityFieldDefinitionList().forEach(field -> {
-            if (field.getFieldType().getType().contains("Date")) {
-                content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\">\n" +
-                        "                <input name=\"" + field.getName() + "FromFilterInput\" pInputText [(ngModel)]=\"search" + entity.getName() + "." + field.getName() + "From\">\n" +
-                        "                تا\n" +
-                        "                <input name=\"" + field.getName() + "ToFilterInput\" pInputText [(ngModel)]=\"search" + entity.getName() + "." + field.getName() + "To\">\n" +
-                        "              </th>");
-            } else if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())) {
-                content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\"><input name=\"" + field.getName() + "FilterInput\" pInputText [(ngModel)]=\"search" + entity.getName() + "." + field.getName() + "\"></th>\n");
-            } else if (field.getFieldType().getType().contains(ComponentTypes.DROP_DOWN.getValue())
-                    || field.getFieldType().getType().contains(ComponentTypes.RADIO_BUTTON.getValue())) {
-                content.append("          <th colspan=\"" + field.getFieldType().getColspan() + "\"> \n" +
-                        "               <p-dropdown name=\"" + field.getName() + "FilterDropDown\" [options]=\"" + field.getName() + "options\" dataKey=\"value\" [(ngModel)]=\"search" + entity.getName() + "." + field.getName() + "\" optionLabel=\"label\" dataKey=\"value\" ></p-dropdown>\n" +
-                        "           </th>\n");
-            } else {
-                content.append("            <th colspan=\"" + field.getFieldType().getColspan() + "\"></th>\n");
+        entity.getEntityFieldDefinitionList().
 
-            }
-        });
+                forEach(field ->
+
+                {
+                    if (field.getFieldType().getType().contains("Date")) {
+                        content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\">\n" +
+                                "                <input name=\"" + field.getName() + "FromFilterInput\" pInputText [(ngModel)]=\"search" + entity.getName() + "." + field.getName() + "From\">\n" +
+                                "                تا\n" +
+                                "                <input name=\"" + field.getName() + "ToFilterInput\" pInputText [(ngModel)]=\"search" + entity.getName() + "." + field.getName() + "To\">\n" +
+                                "              </th>");
+                    } else if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())) {
+                        content.append("              <th colspan=\"" + field.getFieldType().getColspan() + "\"><input name=\"" + field.getName() + "FilterInput\" pInputText [(ngModel)]=\"search" + entity.getName() + "." + field.getName() + "\"></th>\n");
+                    } else if (field.getFieldType().getType().contains(ComponentTypes.DROP_DOWN.getValue())
+                            || field.getFieldType().getType().contains(ComponentTypes.RADIO_BUTTON.getValue())) {
+                        content.append("          <th colspan=\"" + field.getFieldType().getColspan() + "\"> \n" +
+                                "               <p-dropdown name=\"" + field.getName() + "FilterDropDown\" [options]=\"" + field.getName() + "options\" dataKey=\"value\" [(ngModel)]=\"search" + entity.getName() + "." + field.getName() + "\" optionLabel=\"label\" dataKey=\"value\" ></p-dropdown>\n" +
+                                "           </th>\n");
+                    } else {
+                        content.append("            <th colspan=\"" + field.getFieldType().getColspan() + "\"></th>\n");
+
+                    }
+                });
 
         content.append(
                 "              <th colspan=\"2\"></th>\n" +
@@ -679,28 +693,32 @@ public class FrontGenerator {
                 "            <tr>\n");
         content.append("              <td colspan=\"1\">{{i+1}}</td>\n");
         Gson gson = new Gson();
-        entity.getEntityFieldDefinitionList().forEach(field -> {
-            if (field.getFieldType().getType().toLowerCase().contains("Date".toLowerCase())) {
-                content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + " | jalalitime }} </td>\n");
-            } else if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())) {
-                content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + "}} </td>\n");
-            } else if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.DROP_DOWN.getValue().toLowerCase())) {
-                if (field.getFieldType().getOptions() != null) {
+        entity.getEntityFieldDefinitionList().
 
-                    content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + " | optionConverter : " + gson.toJson(field.getFieldType().getOptions()) + "}} </td>\n");
-                }
-            } else if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
-                if (field.getFieldType().getOptions() != null) {
-                    content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + " | optionConverter : " + gson.toJson(field.getFieldType().getOptions()) + "}} </td>\n");
-                }
-            } else {
-                content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">\n" +
-                        "              <span *ngIf = \"item." + field.getName() + "\">\n" +
-                        "                   {{item." + field.getName() + "." + entityLabels.get(field.getFieldType().getType()) + "}} \n" +
-                        "               </span>\n" +
-                        "               </td>\n");
-            }
-        });
+                forEach(field ->
+
+                {
+                    if (field.getFieldType().getType().toLowerCase().contains("Date".toLowerCase())) {
+                        content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + " | jalalitime }} </td>\n");
+                    } else if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType())) {
+                        content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + "}} </td>\n");
+                    } else if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.DROP_DOWN.getValue().toLowerCase())) {
+                        if (field.getFieldType().getOptions() != null) {
+
+                            content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + " | optionConverter : " + gson.toJson(field.getFieldType().getOptions()) + "}} </td>\n");
+                        }
+                    } else if (field.getFieldType().getType().toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
+                        if (field.getFieldType().getOptions() != null) {
+                            content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + " | optionConverter : " + gson.toJson(field.getFieldType().getOptions()) + "}} </td>\n");
+                        }
+                    } else {
+                        content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">\n" +
+                                "              <span *ngIf = \"item." + field.getName() + "\">\n" +
+                                "                   {{item." + field.getName() + "." + entityLabels.get(field.getFieldType().getType()) + "}} \n" +
+                                "               </span>\n" +
+                                "               </td>\n");
+                    }
+                });
         content.append("              <td colspan=\"2\">\n" +
                 "               <button type=\"button\" (click)=\"edit(item)\" class=\"btn btn-info\">ویرایش</button>\n" +
                 "              </td>\n");
@@ -723,15 +741,20 @@ public class FrontGenerator {
                 "  </div>\n" +
                 "</div>\n");
         String result = content.toString();
-        result = result.replace("#LowerCase", entity.getName().toLowerCase());
+        result = result.replace("#LowerCase", entity.getName().
+
+                toLowerCase());
         result = result.replace("#entity", entity.getName());
         result = result.replace("#FarsiName", entity.getFarsiName());
 
         System.out.println(result);
-        path += "src\\app\\" + GeneratorTools.camelToDashedSnake(entity.getName()).toLowerCase() + "\\";
+        path += "src\\app\\" + GeneratorTools.camelToDashedSnake(entity.getName()).
+
+                toLowerCase() + "\\";
         File file = new File(path);
         file.mkdirs();
-        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/" + GeneratorTools.camelToSnake(entity.getName()).toLowerCase() + ".component.html"))) {
+        try (
+                PrintStream out = new PrintStream(new FileOutputStream(path + "/" + GeneratorTools.camelToSnake(entity.getName()).toLowerCase() + ".component.html"))) {
             out.print(result);
         }
         return result;
