@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FieldType implements Serializable {
 
-    private String type; //DropDown
+    private Choice type; //DropDown
     private String referenceUrl;//http://localhost:9090/project-name/reasons
     private String defaultValue;//2
     private List<Choice> options;//[{"label": "عدم توانایی فنی", "value": "1"},{"label": "مشکلات اخلاقی", "value": "2"}]
@@ -23,12 +23,13 @@ public class FieldType implements Serializable {
     private String optionValue;//value
     private Integer colspan;
     private Boolean password = false;
+    private Choice metaType;
 
-    public String getType() {
+    public Choice getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(Choice type) {
         this.type = type;
     }
 
@@ -80,32 +81,6 @@ public class FieldType implements Serializable {
         this.colspan = colspan;
     }
 
-//    @JsonIgnore
-//    public List<String> getOptionLabels() {
-//        if(options == null || options.isEmpty())
-//            return null;
-//        try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            Choice[] list = objectMapper.readValue(options, Choice[].class);
-//            return Arrays.stream(list).map(Choice::getLabel).collect(Collectors.toList());
-//        } catch (JsonProcessingException e) {
-//            throw new RuntimeException("Json is not parsable for option : " + options);
-//        }
-//    }
-
-//    @JsonIgnore
-//    public List<String> getOptionValues() {
-//        if(options == null || options.isEmpty())
-//            return null;
-//        try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            DropDownType[] list = objectMapper.readValue(options, Choice[].class);
-//            return Arrays.stream(list).map(DropDownType::getValue).collect(Collectors.toList());
-//        } catch (JsonProcessingException e) {
-//            throw new RuntimeException("Json is not parsable for option : " + options);
-//        }
-//    }
-
     public Map<String, String> getOptionMap() {
         if (options == null || options.isEmpty())
             return null;
@@ -123,5 +98,13 @@ public class FieldType implements Serializable {
 
     public void setPassword(Boolean password) {
         this.password = password;
+    }
+
+    public Choice getMetaType() {
+        return metaType;
+    }
+
+    public void setMetaType(Choice metaType) {
+        this.metaType = metaType;
     }
 }

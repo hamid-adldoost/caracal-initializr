@@ -16,6 +16,7 @@ public class EntityFieldDefinition implements Serializable {
     private Boolean readOnly;
     private Boolean unique;
     private String validationRegex;
+    private Integer gridColumns;
 
     public String getName() {
         return name;
@@ -87,5 +88,13 @@ public class EntityFieldDefinition implements Serializable {
 
     public void setValidationRegex(String validationRegex) {
         this.validationRegex = validationRegex;
+    }
+
+    public Integer getGridColumns() {
+        return gridColumns;
+    }
+
+    public void setGridColumns(Integer gridColumns) {
+        this.gridColumns = gridColumns;
     }
 }

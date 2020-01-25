@@ -96,14 +96,20 @@ public class GeneratorRestService {
         fieldDefinition.setName("id");
         fieldDefinition.setFarsiName("شناسه");
         fieldDefinition.setFieldType(new FieldType());
-        fieldDefinition.getFieldType().setType("Long");
+        Choice c = new Choice();
+        c.setLabel("Long");
+        c.setValue("Long");
+        fieldDefinition.getFieldType().setType(c);
         entityDefinition.getEntityFieldDefinitionList().add(fieldDefinition);
 
         fieldDefinition = new EntityFieldDefinition();
         fieldDefinition.setFieldType(new FieldType());
         fieldDefinition.setName("name");
         fieldDefinition.setFarsiName("نام");
-        fieldDefinition.getFieldType().setType("String");
+        Choice c2 = new Choice();
+        c2.setLabel("String");
+        c2.setLabel("String");
+        fieldDefinition.getFieldType().setType(c2);
         entityDefinition.getEntityFieldDefinitionList().add(fieldDefinition);
         systemDefinition.getEntityDefinitionList().add(entityDefinition);
         fieldDefinition.setLength(100);

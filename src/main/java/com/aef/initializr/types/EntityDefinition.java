@@ -8,6 +8,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EntityDefinition implements Serializable {
 
+    private String header;
     private String name;
     private String farsiName;
     private String label;
@@ -15,6 +16,15 @@ public class EntityDefinition implements Serializable {
     private Boolean hasForm;
     private boolean enableValidation;
     private boolean hasAttachment;
+    private int gridColumns;
+
+    public String getHeader() {
+        return header;
+    }
+
+    public void setHeader(String header) {
+        this.header = header;
+    }
 
     public String getName() {
         return name;
@@ -70,5 +80,13 @@ public class EntityDefinition implements Serializable {
 
     public void setHasAttachment(boolean hasAttachment) {
         this.hasAttachment = hasAttachment;
+    }
+
+    public int getGridColumns() {
+        return gridColumns;
+    }
+
+    public void setGridColumns(int gridColumns) {
+        this.gridColumns = gridColumns;
     }
 }
