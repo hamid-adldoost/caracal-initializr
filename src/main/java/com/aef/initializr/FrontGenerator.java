@@ -519,7 +519,7 @@ public class FrontGenerator {
                 }
                 content.append("        </div>\n");
 
-                content.append("        <div class=\"col-lg-" + Math.min ((12 / entity.getGridColumns()) * field.getGridColumns() - 2, 10) + "\" style=\"text-align: right;\">\n");
+                content.append("        <div class=\"col-lg-" + Math.min((12 / entity.getGridColumns()) * field.getGridColumns() - 2, 10) + "\" style=\"text-align: right;\">\n");
 
 
                 if (field.getFieldType().getType().getValue().toLowerCase().contains("Date".toLowerCase())) {
@@ -545,7 +545,9 @@ public class FrontGenerator {
                         type = "password";
 
                     String meta = "";
-                    if (field.getFieldType().getMetaType() != null) {
+                    if (field.getFieldType().getMetaType() != null
+                            && field.getFieldType().getMetaType().getValue() != null
+                            && !field.getFieldType().getMetaType().getValue().isEmpty()) {
                         if (field.getFieldType().getMetaType().getValue().toLowerCase().equals(MetaTypes.CURRENCY.name().toLowerCase())) {
                             meta = "currencyMask [options]=\"{ prefix: '', thousands: ',', precision: 0 }\"";
                         } else if (field.getFieldType().getMetaType().getValue().toLowerCase().equals(MetaTypes.INTEGER.name().toLowerCase())) {
@@ -706,9 +708,10 @@ public class FrontGenerator {
                         content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName() + " | jalalitime }} </td>\n");
                     } else if (AEFGenerator.getBaseTypes().contains(field.getFieldType().getType().getValue())) {
                         content.append("              <td colspan=\"" + field.getFieldType().getColspan() + "\">{{item." + field.getName());
-                        if(field.getFieldType().getMetaType() != null && (!field.getFieldType().getMetaType().getValue().isEmpty()) && field.getFieldType().getMetaType().getValue().toLowerCase().equals(MetaTypes.CURRENCY.name().toLowerCase())) {
-                            content.append(" | currency:' ':'':'1.0-0' ");
-                        }
+                        if (fieldHasMetaType(field))
+                            if (field.getFieldType().getMetaType().getValue().toLowerCase().equals(MetaTypes.CURRENCY.name().toLowerCase())) {
+                                content.append(" | currency:' ':'':'1.0-0' ");
+                            }
                         content.append("}} </td>\n");
                     } else if (field.getFieldType().getType().getValue().toLowerCase().contains(ComponentTypes.DROP_DOWN.getValue().toLowerCase())) {
                         if (field.getFieldType().getOptions() != null) {
@@ -724,9 +727,11 @@ public class FrontGenerator {
                                 "              <span *ngIf = \"item." + field.getName() + "\">\n" +
                                 "                   {{item." + field.getName() + "." + entityLabels.get(field.getFieldType().getType().getValue()));
 
-                                if(field.getFieldType().getMetaType().getValue().toLowerCase().equals(MetaTypes.CURRENCY.name().toLowerCase())) {
-                                    content.append(" | currency:' ':'':'1.0-0' ");
-                                }
+                        if(fieldHasMetaType(field)) {
+                            if (field.getFieldType().getMetaType().getValue().toLowerCase().equals(MetaTypes.CURRENCY.name().toLowerCase())) {
+                                content.append(" | currency:' ':'':'1.0-0' ");
+                            }
+                        }
                         content.append("}} \n" +
                                 "               </span>\n" +
                                 "               </td>\n");
@@ -771,6 +776,14 @@ public class FrontGenerator {
             out.print(result);
         }
         return result;
+    }
+
+    private static boolean fieldHasMetaType(EntityFieldDefinition field) {
+        return field.getFieldType().getMetaType() != null
+                && field.getFieldType().getMetaType().getValue() != null
+                && field.getFieldType().getMetaType().getLabel() != null
+                && (!field.getFieldType().getMetaType().getValue().isEmpty())
+                && (!field.getFieldType().getMetaType().getLabel().isEmpty());
     }
 
     public static String refactorAppModule(String path, List<String> entityNames) throws IOException {
