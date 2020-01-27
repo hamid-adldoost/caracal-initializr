@@ -17,7 +17,7 @@ public class ProjectDto implements DomainDto<Project, ProjectDto> {
     @NotNull(message = "{id.should.not.be.null}")
     private Long id;
     private String name;
-    private String jonMessage;
+    private String jsonMessage;
     @NotNull(message = "{generationDate.should.not.be.null}")
     private Date generationDate;
     @NotEmpty(message = "{backendGenerationPath.should.not.be.Empty}")
@@ -40,11 +40,11 @@ public class ProjectDto implements DomainDto<Project, ProjectDto> {
         this.name = name;
     }
 
-    public String getJonMessage() {
-        return jonMessage;
+    public String getJsonMessage() {
+        return jsonMessage;
     }
-    public void setJonMessage(String jonMessage) {
-        this.jonMessage = jonMessage;
+    public void setJsonMessage(String jsonMessage) {
+        this.jsonMessage = jsonMessage;
     }
 
     public Date getGenerationDate() {
@@ -77,7 +77,7 @@ public class ProjectDto implements DomainDto<Project, ProjectDto> {
         ProjectDto dto = new ProjectDto();
         dto.setId(project.getId());
         dto.setName(project.getName());
-        dto.setJonMessage(project.getJonMessage());
+        dto.setJsonMessage(project.getJsonMessage());
         dto.setGenerationDate(project.getGenerationDate());
         dto.setBackendGenerationPath(project.getBackendGenerationPath());
         dto.setFrontendGenerationPath(project.getFrontendGenerationPath());
@@ -92,7 +92,7 @@ public class ProjectDto implements DomainDto<Project, ProjectDto> {
         Project project = new Project();
         project.setId(dto.getId());
         project.setName(dto.getName());
-        project.setJonMessage(dto.getJonMessage());
+        project.setJsonMessage(dto.getJsonMessage());
         project.setGenerationDate(dto.getGenerationDate());
         project.setBackendGenerationPath(dto.getBackendGenerationPath());
         project.setFrontendGenerationPath(dto.getFrontendGenerationPath());

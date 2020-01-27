@@ -131,9 +131,9 @@ public class GeneratorRestService {
     }
 
     @PostMapping("/generate")
-    public void generateFromJson(@RequestBody SystemDefinition systemDefinition) throws IOException {
+    public void generateFromJson(@RequestBody String jsonBody) throws IOException {
 
-        aefGenerator.generateAll(systemDefinition);
+        aefGenerator.generateAll(jsonBody);
     }
 
 }

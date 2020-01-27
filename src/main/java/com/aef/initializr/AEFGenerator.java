@@ -2,7 +2,6 @@ package com.aef.initializr;
 
 
 import com.aef.initializr.dto.ProjectDto;
-import com.aef.initializr.model.Project;
 import com.aef.initializr.service.ProjectService;
 import com.aef.initializr.types.ComponentTypes;
 import com.aef.initializr.types.EntityDefinition;
@@ -12,6 +11,7 @@ import com.google.common.base.CaseFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.google.gson.Gson;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
@@ -29,6 +29,7 @@ public class AEFGenerator {
         this.projectService = projectService;
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ProjectDto saveProject(SystemDefinition systemDefinition) {
         ProjectDto project = new ProjectDto();
         project.setName(systemDefinition.getBackendConfig().getMavenConfig().getProjectName());
@@ -36,13 +37,16 @@ public class AEFGenerator {
         project.setBackendGenerationPath(systemDefinition.getBackendConfig().getContextPath());
         project.setFrontendGenerationPath(systemDefinition.getFrontendConfig().getTargetPath());
         Gson gson = new Gson();
-        project.setJonMessage(gson.toJson(systemDefinition));
+        project.setJsonMessage(gson.toJson(systemDefinition));
         return projectService.save(project);
     }
 
     @Transactional
-    public void generateAll(SystemDefinition systemDefinition) throws IOException {
+    public void generateAll(String jsobBody) throws IOException {
 
+
+        Gson gson = new Gson();
+        SystemDefinition systemDefinition = gson.fromJson(jsobBody, SystemDefinition.class);
 
         saveProject(systemDefinition);
 

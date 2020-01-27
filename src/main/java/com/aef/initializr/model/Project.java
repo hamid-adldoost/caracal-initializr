@@ -22,9 +22,9 @@ public class Project implements DomainEntity {
     @Column(name = "name", length = 100)
     private String name;
 
-    @Column(name = "jon_message")
+    @Column(name = "json_message")
     @Lob
-    private String jonMessage;
+    private String jsonMessage;
 
     @Column(name = "generation_date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -56,12 +56,12 @@ public class Project implements DomainEntity {
     }
 
 
-    public String getJonMessage() {
-        return jonMessage;
+    public String getJsonMessage() {
+        return jsonMessage;
     }
 
-    public void setJonMessage(String jonMessage) {
-       this.jonMessage = jonMessage;
+    public void setJsonMessage(String jonMessage) {
+       this.jsonMessage = jonMessage;
     }
 
 
