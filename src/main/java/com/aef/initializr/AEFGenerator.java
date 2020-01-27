@@ -2254,7 +2254,7 @@ public class AEFGenerator {
         }
         content.append("    @PostMapping(path = \"/save\")\n" +
                 "    public #EntityDto save(@RequestBody #EntityDto #entity) {\n" +
-                "        #entityService.validateBeforeSave(#entity);" +
+                "        #entityService.validateBeforeSave(#entity);\n" +
                 "        return #entityService.save(#entity);\n" +
                 "    }\n" +
                 "\n");
