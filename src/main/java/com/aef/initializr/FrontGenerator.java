@@ -584,6 +584,7 @@ public class FrontGenerator {
                     "          <div class=\"ui-g-6\" style=\"text-align: right;\">\n" +
                     "            <p-fileUpload #uploader name=\"myfile\" [customUpload]=\"true\"\n" +
                     "                          (uploadHandler)=\"uploadFile($event)\">\n" +
+                    "                           uploadLabel=\"بارگذاری\" chooseLabel=\"انتخاب فایل\" cancelLabel=\"لغو\" \n" +
                     "               <ng-template pTemplate=\"toolbar\">\n" +
                     "\n" +
                     "                <div>\n" +
