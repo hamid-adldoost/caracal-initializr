@@ -519,7 +519,7 @@ public class FrontGenerator {
                 }
                 content.append("        </div>\n");
 
-                content.append("        <div class=\"col-lg-" + Math.min((12 / entity.getGridColumns()) * field.getGridColumns() - 2, 10) + "\" style=\"text-align: right;\">\n");
+                content.append("        <div class=\"ui-lg-" + Math.min((12 / entity.getGridColumns()) * field.getGridColumns() - 2, 10) + "\" style=\"text-align: right;\">\n");
 
 
                 if (field.getFieldType().getType().getValue().toLowerCase().contains("Date".toLowerCase())) {
