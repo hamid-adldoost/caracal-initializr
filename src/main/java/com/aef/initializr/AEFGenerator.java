@@ -950,7 +950,8 @@ public class AEFGenerator {
             String firstCharFieldName = field.getName().substring(0, 1);
             String upperCaseCharFieldName = field.getName().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
 
-            if (field.getFieldType().getType().getValue().toLowerCase().contains("DropDown".toLowerCase())) {
+            if (field.getFieldType().getType().getValue().toLowerCase().contains("DropDown".toLowerCase())
+                    || field.getFieldType().getType().getValue().toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
                 content.append("\n")
                         .append("    public Long get").append(upperCaseCharFieldName).append("() {\n")
                         .append("        return ").append(field.getName()).append(";\n")
@@ -1750,7 +1751,8 @@ public class AEFGenerator {
                     }
                 }
                 content.append("\n    private ").append(field.getFieldType().getType().getValue()).append(" ").append(field.getName()).append(";");
-            } else if (field.getFieldType().getType().getValue().toLowerCase().contains("DropDown".toLowerCase())) {
+            } else if (field.getFieldType().getType().getValue().toLowerCase().contains(ComponentTypes.DROP_DOWN.getValue().toLowerCase())
+                    || field.getFieldType().getType().getValue().toLowerCase().contains(ComponentTypes.RADIO_BUTTON.getValue().toLowerCase())) {
                 content.append("\n    private Long").append(" ").append(field.getName()).append(";");
             } else {
                 content.append("\n    private ").append(field.getFieldType().getType().getValue() + "Dto").append(" ").append(field.getName()).append(";");
@@ -1763,7 +1765,7 @@ public class AEFGenerator {
             String firstCharFieldName = field.getName().substring(0, 1);
             String upperCaseCharFieldName = field.getName().replaceFirst(firstCharFieldName, firstCharFieldName.toUpperCase());
 
-            if (field.getFieldType().getType().getValue().toLowerCase().contains("DropDown".toLowerCase())) {
+            if (field.getFieldType().getType().getValue().toLowerCase().contains(ComponentTypes.DROP_DOWN.getValue().toLowerCase())) {
                 content.append("\n")
                         .append("    public Long get").append(upperCaseCharFieldName).append("() {\n")
                         .append("        return ").append(field.getName()).append(";\n")
