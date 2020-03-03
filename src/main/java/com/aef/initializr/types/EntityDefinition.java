@@ -17,6 +17,7 @@ public class EntityDefinition implements Serializable {
     private boolean enableValidation;
     private boolean hasAttachment;
     private int gridColumns;
+    private boolean isAuditable;
 
     public String getHeader() {
         return header;
@@ -88,5 +89,13 @@ public class EntityDefinition implements Serializable {
 
     public void setGridColumns(int gridColumns) {
         this.gridColumns = gridColumns;
+    }
+
+    public boolean isAuditable() {
+        return isAuditable;
+    }
+
+    public void setAuditable(boolean auditable) {
+        isAuditable = auditable;
     }
 }
