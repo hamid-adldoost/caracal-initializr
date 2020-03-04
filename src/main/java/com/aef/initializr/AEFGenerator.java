@@ -459,9 +459,9 @@ public class AEFGenerator {
         content += "        roles.add(AUTHORITY_FIND_ATTACHMENT);\n" +
                 "        roles.add(AUTHORITY_SEARCH_ATTACHMENT);\n" +
                 "        roles.add(AUTHORITY_SAVE_ATTACHMENT);\n" +
-                "        roles.add(AUTHORITY_REMOVE_ATTACHMENT);";
+                "        roles.add(AUTHORITY_REMOVE_ATTACHMENT);\n";
 
-        content += "    return roles;";
+        content += "    return roles;\n";
         content += "    }\n";
         content += "}\n";
 
@@ -777,6 +777,10 @@ public class AEFGenerator {
                 "    private String fileMd5;\n" +
                 "\n" +
                 "\n" +
+                "    @Override\n" +
+                "    public boolean isAuditable() {\n" +
+                "        return true;\n" +
+                "    }" +
                 "\n" +
                 "    public Long getId() {\n" +
                 "        return id;\n" +
@@ -946,7 +950,7 @@ public class AEFGenerator {
 
         content.append("\n\n");
 
-        content.append("@Override\n" +
+        content.append("     @Override\n" +
                 "    public boolean isAuditable() {\n");
         if(entity.isAuditable()) {
             content.append("        return true;\n");
@@ -1144,6 +1148,7 @@ public class AEFGenerator {
                 "import com.aef3.data.impl.AbstractDAOImpl;\n" +
                 "import #package.model.Attachment;\n" +
                 "import org.springframework.stereotype.Repository;\n" +
+                "import org.springframework.security.core.context.SecurityContextHolder;\n" +
                 "import java.util.List;\n" +
                 "\n" +
                 "\n" +
@@ -1165,6 +1170,11 @@ public class AEFGenerator {
                 "                .setParameter(\"recordId\", recordId)\n" +
                 "                .setParameter(\"idList\", attachmentIdList)\n" +
                 "                .executeUpdate();\n" +
+                "    }" +
+                "\n" +
+                "    @Override\n" +
+                "    public String getCurrentUser() {\n" +
+                "        return SecurityContextHolder.getContext().getAuthentication().getName();\n" +
                 "    }" +
                 "}");
 
