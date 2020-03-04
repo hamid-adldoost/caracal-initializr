@@ -692,7 +692,7 @@ public class AEFGenerator {
                 "        <dependency>\n" +
                 "            <groupId>com.adldoost</groupId>\n" +
                 "            <artifactId>aef3-data</artifactId>\n" +
-                "            <version>2.0-SNAPSHOT</version>\n" +
+                "            <version>2.1-SNAPSHOT</version>\n" +
                 "        </dependency>\n" +
                 "        <dependency>\n" +
                 "           <groupId>mysql</groupId>\n" +
