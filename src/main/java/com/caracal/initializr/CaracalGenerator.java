@@ -217,6 +217,7 @@ public class CaracalGenerator {
         FrontGenerator.generateRouter(systemDefinition.getFrontendConfig().getTargetPath(), entityNameList);
         FrontGenerator.generateSidebarComponent(systemDefinition.getFrontendConfig().getTargetPath(), systemDefinition.getEntityDefinitionList());
         FrontGenerator.generateSidebarComponentView(systemDefinition.getFrontendConfig().getTargetPath(), systemDefinition.getFrontendConfig().getProjectFarsiName());
+        FrontGenerator.refactorIndexHtml(systemDefinition.getFrontendConfig().getTargetPath(), systemDefinition.getFrontendConfig().getProjectFarsiName());
         FrontGenerator.generateProxyConf(systemDefinition.getFrontendConfig().getTargetPath(),
                 systemDefinition.getBackendConfig().getContextPath(),
                 systemDefinition.getBackendConfig().getBackendPortNumber());

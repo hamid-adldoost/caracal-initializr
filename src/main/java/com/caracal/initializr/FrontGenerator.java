@@ -205,7 +205,8 @@ public class FrontGenerator {
                 "  attachmentList = [];\n" +
                 "  sortField: any;\n" +
                 "\n" +
-                "  @ViewChild('uploader', {static: false}) fileUpload;\n");
+                "  @ViewChild('uploader', {static: false}) fileUpload;\n" +
+                "  @ViewChild('table', {static: false}) #entityTable;\n");
 
         entity.getEntityFieldDefinitionList().forEach(field -> {
             if (field.getValidationRegex() != null && !field.getValidationRegex().isEmpty()) {
@@ -220,7 +221,7 @@ public class FrontGenerator {
                 content.append("    this." + field.getName() + "options = this.commonService.preparePureListToDropdown(this." + field.getName() + "options);\n");
             }
         });
-        content.append("    this.#LowerCase =  new Object();\n");
+        content.append("    this.#LowerCase =  {};\n");
 //        content.append(
 //                "    this.#LowerCaseService.list(new QueryOptions(), 'search').subscribe(res => {\n" +
 //                "      console.log('list call res', res);\n" +
@@ -238,12 +239,18 @@ public class FrontGenerator {
 //                "    this.sortField = {sortField: event.field, sortOrder: this.commonService.convertSortOrder(event.order)};\n" +
 //                "  }\n");
 
-        content.append("  loadItems(event: any) {\n" +
-                "    if (!event) {\n" +
-                "      event = {first : 0, rows : 20};\n" +
+        content.append(" generateFetchQuery(event: any) {\n" +
+                "   if (!event) {\n" +
+                "      event = {first: 0, rows: 20};\n" +
+                "      if (this.#entityTable.first) {\n" +
+                "        event.first = this.#entityTable.first;\n" +
+                "      }\n" +
+                "      if (this.#entityTable.rows) {\n" +
+                "        event.rows = this.#entityTable.rows;\n" +
+                "      }\n" +
                 "    }\n" +
                 "    let query = new QueryOptions();\n" +
-                "    query.options = [{key: 'firstIndex', value: event.first}, {key: 'pageSize', value: event.rows}];\n");
+                "    query.options = [{key: 'firstIndex', value: event.first}, {key: 'pageSize', value: event.rows}];");
 
         entity.getEntityFieldDefinitionList().forEach(field -> {
             if (field.getFieldType().getType().getValue().contains("Date")) {
@@ -274,7 +281,13 @@ public class FrontGenerator {
                 "      this.sortField = {sortField: event.sortField, sortOrder: this.commonService.convertSortOrder(event.sortOrder)};\n" +
                 "      query.options.push({key: 'sortField', value: this.sortField.sortField});\n" +
                 "      query.options.push({key: 'sortOrder', value: this.sortField.sortOrder});\n" +
-                "    }\n");
+                "    }\n" +
+                "   return query;\n");
+        content.append(" }\n");
+
+        content.append("  loadItems(event: any) {\n" +
+                "    const query = this.generateFetchQuery(event);\n");
+
 
         content.append("\n    this.#LowerCaseService.list(query, 'search').subscribe(res => {\n" +
                 "      this.items = res;\n" +
@@ -505,7 +518,7 @@ public class FrontGenerator {
                 }
 
 
-                content.append("        <div class=\"ui-lg-" + 2 + "\">\n" +
+                content.append("        <div class=\"ui-lg-" + 1 + " ui-md-" + 2 + " ui-sm-12\">\n" +
                         "\n" +
                         "       " + field.getFarsiName() + "\n");
                 if (!field.getNullable()) {
@@ -513,7 +526,7 @@ public class FrontGenerator {
                 }
                 content.append("        </div>\n");
 
-                content.append("        <div class=\"ui-lg-" + Math.min((12 / entity.getGridColumns()) * field.getGridColumns() - 2, 10) + "\" style=\"text-align: right;\">\n");
+                content.append("        <div class=\"ui-lg-" + Math.min((12 / entity.getGridColumns()) * field.getGridColumns() - 1, 11) + " ui-md-" + Math.min((12 / entity.getGridColumns()) * field.getGridColumns() - 2, 10) + "ui-sm-12\" style=\"text-align: right;\">\n");
 
 
                 if (field.getFieldType().getType().getValue().toLowerCase().contains("Date".toLowerCase())) {
@@ -552,7 +565,11 @@ public class FrontGenerator {
                     }
 
 
-                    content.append("          <input name=\"" + field.getName() + "Input\" pInputText type=\"" + type + "\" \n " + meta + " \n [(ngModel)]=\"#LowerCase.").append(field.getName()).append("\"");
+                    content.append("          <input name=\"" + field.getName() + "Input\" pInputText type=\"" + type + "\"");
+                    if(meta != null && !meta.isEmpty()) {
+                        content.append("\n " + meta + " \n");
+                    }
+                    content.append(" [(ngModel)]=\"#LowerCase.").append(field.getName()).append("\"");
 
                     if (field.getValidationRegex() != null && !field.getValidationRegex().isEmpty()) {
                         content.append(" [pValidateOnly]=\"true\" [pKeyFilter]=\"").append(field.getName()).append("Filter").append("\" ");
@@ -575,22 +592,21 @@ public class FrontGenerator {
                     "\n" +
                     "            بارگذاری فایل پیوست\n" +
                     "          </div>\n" +
-                    "          <div class=\"ui-g-6\" style=\"text-align: right;\">\n" +
-                    "            <p-fileUpload #uploader name=\"myfile\" [customUpload]=\"true\"\n" +
+                    "          <div class=\"ui-g-10\" style=\"text-align: right;\">\n" +
+                    "             <div style=\"max-width: 400px; min-width: 100px;\">\n" +
+                    "               <p-fileUpload #uploader name=\"myfile\" [customUpload]=\"true\"\n" +
                     "                          (uploadHandler)=\"uploadFile($event)\">\n" +
                     "                           uploadLabel=\"بارگذاری\" chooseLabel=\"انتخاب فایل\" cancelLabel=\"لغو\" \n" +
-                    "               <ng-template pTemplate=\"toolbar\">\n" +
+                    "                   <ng-template pTemplate=\"toolbar\">\n" +
                     "\n" +
-                    "                <div>\n" +
+                    "                   <div>\n" +
                     "                  شرح پیوست :\n" +
-                    "                  <input name=\"fileDescInput\" type=\"text\" [(ngModel)]=\"uploadFileDesc\"/>\n" +
-                    "                </div>\n" +
-                    "              </ng-template>\n" +
-                    "           </p-fileUpload>\n" +
-                    "          </div>\n" +
-                    "          <div class=\"ui-g-4\">\n" +
-                    "\n" +
-                    "          </div>\n" +
+                    "                       <input name=\"fileDescInput\" type=\"text\" [(ngModel)]=\"uploadFileDesc\"/>\n" +
+                    "                   </div>\n" +
+                    "                   </ng-template>\n" +
+                    "               </p-fileUpload>\n" +
+                    "              </div>\n"+
+                    "           </div>\n" +
                     "        </div>\n");
             content.append("\n");
             content.append("\n" +
@@ -628,7 +644,7 @@ public class FrontGenerator {
                         "      </div>\n" +
                         "\n" +
                         "      <div class=\"row tableWrapper\" *ngIf=\"items\" style=\"margin-top: 5px;\">\n" +
-                        "        <p-table [value]=\"items.data\" [responsive]=\"true\" [paginator]=\"true\" [lazy]=\"true\" (onLazyLoad)=\"loadItems($event)\"\n" +
+                        "        <p-table #table [value]=\"items.data\" [paginator]=\"true\" [lazy]=\"true\" (onLazyLoad)=\"loadItems($event)\"\n" +
                         "                 [rows]=\"20\" [totalRecords]=\"items.count\" emptymessage=\"درخواستی یافت نشد\" [style]=\"{minWidth:'100%', width:'" + entity.getEntityFieldDefinitionList().
 
                         size() * 100 + "px'}\">\n" +
@@ -978,6 +994,20 @@ public class FrontGenerator {
         }
         return content;
 
+    }
+
+    public static String refactorIndexHtml(String path, String projectName) throws IOException {
+        path += "src\\index.html";
+        String content = new String(Files.readAllBytes(Paths.get(path)));
+
+        content = content.replaceAll("#title", projectName);
+
+        File file = new File(path);
+        file.delete();
+        try (PrintStream out = new PrintStream(new FileOutputStream(path))) {
+            out.print(content);
+        }
+        return content;
     }
 
 
