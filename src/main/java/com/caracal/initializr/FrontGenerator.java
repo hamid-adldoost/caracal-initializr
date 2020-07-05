@@ -1010,6 +1010,20 @@ public class FrontGenerator {
         return content;
     }
 
+    public static String refactorLoginHtml(String path, String projectName) throws IOException {
+        path += "src\\app\\login\\login.component.html";
+        String content = new String(Files.readAllBytes(Paths.get(path)));
+
+        content = content.replaceAll("#projectName", projectName);
+
+        File file = new File(path);
+        file.delete();
+        try (PrintStream out = new PrintStream(new FileOutputStream(path))) {
+            out.print(content);
+        }
+        return content;
+    }
+
 
 //    public static void replaceText(String frontProjectPath, String projectName) {
 //
