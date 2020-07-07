@@ -84,6 +84,8 @@ public class CaracalGenerator {
         List<String> entityNameList = systemDefinition.getEntityDefinitionList().stream()
                 .map(EntityDefinition::getName).collect(Collectors.toList());
 
+        generateGitIgnoreFile(rootPath.getPath());
+
 
         if (systemDefinition.getBackendConfig().getBackendGenerationConfig().isGenerateMaven()) {
             generatePOMFile(rootPath.getPath(), systemDefinition.getBackendConfig().getMavenConfig().getProjectName(),
@@ -738,6 +740,49 @@ public class CaracalGenerator {
         }
         return result;
     }
+
+
+
+    private static String generateGitIgnoreFile(String path) throws FileNotFoundException {
+
+        String content = "\n/target/\n" +
+                "!.mvn/wrapper/maven-wrapper.jar\n" +
+                "\n" +
+                "### STS ###\n" +
+                ".apt_generated\n" +
+                ".classpath\n" +
+                ".factorypath\n" +
+                ".project\n" +
+                ".settings\n" +
+                ".springBeans\n" +
+                ".sts4-cache\n" +
+                "\n" +
+                "### IntelliJ IDEA ###\n" +
+                ".idea\n" +
+                "*.iws\n" +
+                "*.iml\n" +
+                "*.ipr\n" +
+                "\n" +
+                "### NetBeans ###\n" +
+                "/nbproject/private/\n" +
+                "/build/\n" +
+                "/nbbuild/\n" +
+                "/dist/\n" +
+                "/nbdist/\n" +
+                "/.nb-gradle/\n";
+
+        System.out.printf(content);
+
+        File file = new File(path);
+        file.mkdirs();
+
+        try (PrintStream out = new PrintStream(new FileOutputStream(path + "/.gitignore"))) {
+            out.print(content);
+        }
+        return content;
+    }
+
+
 
     private static String generateAttachmentEntity(String basePackage, String path) throws FileNotFoundException {
         StringBuilder content = new StringBuilder("");
